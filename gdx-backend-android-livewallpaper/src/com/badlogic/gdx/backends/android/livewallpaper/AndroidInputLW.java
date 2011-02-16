@@ -241,6 +241,7 @@ public final class AndroidInputLW implements Input {
 					//	break;
 					case TouchEvent.TOUCH_UP:
 						processor.touchUp(e.x, e.y, e.pointer, Buttons.LEFT);
+						justTouched = true;
 						break;
 					// case TouchEvent.TOUCH_DRAGGED:
 					// processor.touchDragged(e.x, e.y, e.pointer);
@@ -251,7 +252,7 @@ public final class AndroidInputLW implements Input {
 				int len = touchEvents.size();
 				for (int i = 0; i < len; i++) {
 					TouchEvent e = touchEvents.get(i);
-					if (e.type == TouchEvent.TOUCH_DOWN)
+					if (e.type == TouchEvent.TOUCH_UP)
 						justTouched = true;
 					usedTouchEvents.free(e);
 				}

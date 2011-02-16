@@ -27,6 +27,7 @@ public class AndroidSingleTouchHandlerLW implements AndroidTouchHandlerLW {
 
 	@Override
 	public void onTap(int pX, int pY, AndroidInputLW input) {
+		
 		input.touchX[0] = pX;
 		input.touchY[0] = pY;
 
