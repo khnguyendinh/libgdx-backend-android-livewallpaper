@@ -1,29 +1,28 @@
 package com.badlogic.gdx.backends.android.livewallpaper.surfaceview;
 
-import com.badlogic.gdx.backends.android.surfaceview.ResolutionStrategy;
-
-import android.content.Context;
-import android.opengl.GLSurfaceView;
+import android.service.wallpaper.WallpaperService.Engine;
 import android.util.AttributeSet;
 
-public class DefaultGLSurfaceView extends GLSurfaceView {
+import com.badlogic.gdx.backends.android.surfaceview.ResolutionStrategy;
 
+public class DefaultGLSurfaceView extends GLBaseSurfaceView {
 
     final ResolutionStrategy resolutionStrategy;
 
-    public DefaultGLSurfaceView(Context context, ResolutionStrategy resolutionStrategy) {
-        super(context);
+    public DefaultGLSurfaceView(Engine engine, ResolutionStrategy resolutionStrategy) {
+        super(engine);
         this.resolutionStrategy = resolutionStrategy;
     }
 
-    public DefaultGLSurfaceView(Context context, AttributeSet attrs, ResolutionStrategy resolutionStrategy) {
-        super(context, attrs);
+    public DefaultGLSurfaceView(Engine engine, AttributeSet attrs, ResolutionStrategy resolutionStrategy) {
+        super(engine, attrs);
         this.resolutionStrategy = resolutionStrategy;
     }
 
-    @Override
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        ResolutionStrategy.MeasuredDimension measures = resolutionStrategy.calcMeasures(widthMeasureSpec, heightMeasureSpec);
-        setMeasuredDimension(measures.width, measures.height);
-    }
+    //@Override
+//    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+//        ResolutionStrategy.MeasuredDimension measures = resolutionStrategy.calcMeasures(widthMeasureSpec, heightMeasureSpec);
+//        setMeasuredDimension(measures.width, measures.height);
+//    }
+    
 }

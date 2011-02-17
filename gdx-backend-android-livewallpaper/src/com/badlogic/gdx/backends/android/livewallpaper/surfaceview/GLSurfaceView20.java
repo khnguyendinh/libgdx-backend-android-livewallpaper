@@ -31,11 +31,12 @@ import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.egl.EGLContext;
 import javax.microedition.khronos.egl.EGLDisplay;
 
-import android.content.Context;
 import android.graphics.PixelFormat;
 import android.opengl.GLSurfaceView;
+import android.service.wallpaper.WallpaperService.Engine;
 import android.util.Log;
 
+import com.badlogic.gdx.backends.android.livewallpaper.AndroidApplicationLW;
 import com.badlogic.gdx.backends.android.surfaceview.ResolutionStrategy;
 
 /**
@@ -51,30 +52,30 @@ import com.badlogic.gdx.backends.android.surfaceview.ResolutionStrategy;
  * - The class must select the surface's format, then choose an EGLConfig that matches it exactly (with regards to
  * red/green/blue/alpha channels bit depths). Failure to do so would result in an EGL_BAD_MATCH error.
  */
-public class GLSurfaceView20 extends GLSurfaceView {
+public class GLSurfaceView20 extends DefaultGLSurfaceView {
     static String TAG = "GL2JNIView";
     private static final boolean DEBUG = false;
 
     final ResolutionStrategy resolutionStrategy;
-
-    public GLSurfaceView20(Context context, ResolutionStrategy resolutionStrategy) {
-        super(context);
-         this.resolutionStrategy = resolutionStrategy;
+  
+    public GLSurfaceView20(AndroidApplicationLW app, ResolutionStrategy resolutionStrategy) {
+        super(app.getEngine(), resolutionStrategy);
+        this.resolutionStrategy = resolutionStrategy;
         init(false, 16, 0);
     }
 
-    public GLSurfaceView20(Context context, boolean translucent, int depth, int stencil, ResolutionStrategy resolutionStrategy) {
-        super(context);
+    public GLSurfaceView20(Engine engine, boolean translucent, int depth, int stencil, ResolutionStrategy resolutionStrategy) {
+        super(engine, resolutionStrategy);
         this.resolutionStrategy = resolutionStrategy;
         init(translucent, depth, stencil);
 
     }
 
-    @Override
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        ResolutionStrategy.MeasuredDimension measures = resolutionStrategy.calcMeasures(widthMeasureSpec, heightMeasureSpec);
-        setMeasuredDimension(measures.width, measures.height);
-    }
+//    @Override
+//    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+//        ResolutionStrategy.MeasuredDimension measures = resolutionStrategy.calcMeasures(widthMeasureSpec, heightMeasureSpec);
+//        setMeasuredDimension(measures.width, measures.height);
+//    }
 
     private void init(boolean translucent, int depth, int stencil) {
 
@@ -103,7 +104,9 @@ public class GLSurfaceView20 extends GLSurfaceView {
     }
 
 
-    static class ContextFactory implements GLSurfaceView.EGLContextFactory {
+   
+
+	static class ContextFactory implements GLSurfaceView.EGLContextFactory {
         private static int EGL_CONTEXT_CLIENT_VERSION = 0x3098;
 
         public EGLContext createContext(EGL10 egl, EGLDisplay display, EGLConfig eglConfig) {

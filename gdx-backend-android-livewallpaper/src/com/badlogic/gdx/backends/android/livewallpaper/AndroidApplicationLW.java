@@ -16,12 +16,13 @@
 
 package com.badlogic.gdx.backends.android.livewallpaper;
 
-import net.rbgrn.android.glwallpaperservice.GLWallpaperService;
 import android.app.Activity;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Debug;
 import android.os.Handler;
+import android.service.wallpaper.WallpaperService;
+import android.service.wallpaper.WallpaperService.Engine;
 import android.util.Log;
 
 import com.badlogic.gdx.Application;
@@ -52,11 +53,15 @@ public class AndroidApplicationLW implements Application {
 		GdxNativesLoader.load();
 	}
 
-	public AndroidApplicationLW(GLWallpaperService service) {
+	
+
+	public AndroidApplicationLW(WallpaperService service, Engine engine) {
 		this.service = service;
+		this.engine = engine;
 	}
 
-	protected GLWallpaperService service;
+	protected WallpaperService service;
+	private Engine engine;
 
 	protected AndroidGraphicsLW graphics;
 	protected AndroidInputLW input;
@@ -136,8 +141,8 @@ public class AndroidApplicationLW implements Application {
 		graphics.pause();
 
 		//if (isFinishing()) {
-			graphics.clearManagedCaches();
-			graphics.destroy();
+		//	graphics.clearManagedCaches();
+		//	graphics.destroy();
 		//}
 
 
@@ -162,6 +167,12 @@ public class AndroidApplicationLW implements Application {
 	}
 
 	public void onDestroy() {
+		
+		if (graphics != null) {
+			graphics.clearManagedCaches();
+			graphics.destroy();
+		}
+		
 		if (audio != null) {
 			audio.dispose();
 		}		
@@ -234,7 +245,11 @@ public class AndroidApplicationLW implements Application {
 		return Debug.getNativeHeapAllocatedSize();
 	}
 
-	public GLWallpaperService getService() {
+	public WallpaperService getService() {
 		return service;
+	}
+
+	public Engine getEngine() {
+		return engine;
 	}
 }

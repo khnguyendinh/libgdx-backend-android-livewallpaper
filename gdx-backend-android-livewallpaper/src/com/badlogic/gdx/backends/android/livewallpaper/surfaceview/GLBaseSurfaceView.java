@@ -26,11 +26,14 @@ import javax.microedition.khronos.opengles.GL;
 import javax.microedition.khronos.opengles.GL10;
 
 import android.content.Context;
-import android.opengl.GLSurfaceView;
+import android.opengl.GLSurfaceView.EGLConfigChooser;
+import android.opengl.GLSurfaceView.Renderer;
+import android.service.wallpaper.WallpaperService.Engine;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.SurfaceHolder;
 
+import com.badlogic.gdx.backends.android.livewallpaper.surfaceview.GLSurfaceView20.ContextFactory;
 import com.badlogic.gdx.backends.android.surfaceview.GLDebugHelper;
 
 /**
@@ -130,10 +133,12 @@ import com.badlogic.gdx.backends.android.surfaceview.GLDebugHelper;
  * </pre>
  * 
  */
-public class GLBaseSurfaceView extends GLSurfaceView implements SurfaceHolder.Callback {
-	private final static boolean LOG_THREADS = false;
-	private final static boolean LOG_SURFACE = false;
-	private final static boolean LOG_RENDERER = false;
+public class GLBaseSurfaceView 
+	//extends GLSurfaceView 
+		implements SurfaceHolder.Callback {
+	private final static boolean LOG_THREADS = true;
+	private final static boolean LOG_SURFACE = true;
+	private final static boolean LOG_RENDERER = true;
 	// Work-around for bug 2263168
 	private final static boolean DRAW_TWICE_AFTER_SIZE_CHANGED = true;
 	/**
@@ -168,29 +173,39 @@ public class GLBaseSurfaceView extends GLSurfaceView implements SurfaceHolder.Ca
 	 * @see #setDebugFlags
 	 */
 	public final static int DEBUG_LOG_GL_CALLS = 2;
+	private Engine engine;
 
 	/**
 	 * Standard View constructor. In order to render something, you must call {@link #setRenderer} to register a renderer.
 	 */
-	public GLBaseSurfaceView (Context context) {
-		super(context);
+	public GLBaseSurfaceView (Engine engine) {
+		//super(context);
+		this.engine = engine;
 		init();
 	}
 
 	/**
 	 * Standard View constructor. In order to render something, you must call {@link #setRenderer} to register a renderer.
 	 */
-	public GLBaseSurfaceView (Context context, AttributeSet attrs) {
-		super(context, attrs);
+	public GLBaseSurfaceView (Engine engine, AttributeSet attrs) {
+		//super(context, attrs);
+		this.engine = engine;
 		init();
 	}
 
 	private void init () {
 		// Install a SurfaceHolder.Callback so we get notified when the
 		// underlying surface is created and destroyed
+		
 		SurfaceHolder holder = getHolder();
 		holder.addCallback(this);
 	}
+	
+	public SurfaceHolder getHolder() {
+		return engine.getSurfaceHolder();
+	}
+	
+	
 
 	/**
 	 * Set the glWrapper. If the glWrapper is not null, its {@link GLWrapper#wrap(GL)} method is called whenever a surface is
@@ -273,9 +288,9 @@ public class GLBaseSurfaceView extends GLSurfaceView implements SurfaceHolder.Ca
 	 * If this method is not called, then by default a context will be created with no shared context and with a null attribute
 	 * list.
 	 */
-	public void setEGLContextFactory (EGLContextFactory factory) {
+	public void setEGLContextFactory (ContextFactory contextFactory) {
 		checkRenderThreadState();
-		mEGLContextFactory = factory;
+		mEGLContextFactory = (EGLContextFactory) contextFactory;
 	}
 
 	/**
@@ -420,15 +435,20 @@ public class GLBaseSurfaceView extends GLSurfaceView implements SurfaceHolder.Ca
 	public void queueEvent (Runnable r) {
 		mGLThread.queueEvent(r);
 	}
+	
+	public void onDestroy() {
+		mGLThread.requestExitAndWait();
+	}
 
 	/**
 	 * This method is used as part of the View class and is not normally called or subclassed by clients of GLSurfaceView. Must not
 	 * be called before a renderer has been set.
 	 */
-	@Override protected void onDetachedFromWindow () {
-		super.onDetachedFromWindow();
-		mGLThread.requestExitAndWait();
-	}
+//	@Override protected void 
+//	onDetachedFromWindow () {
+//		super.onDetachedFromWindow();
+//		mGLThread.requestExitAndWait();
+//	}
 
 	// ----------------------------------------------------------------------
 
@@ -498,13 +518,40 @@ public class GLBaseSurfaceView extends GLSurfaceView implements SurfaceHolder.Ca
 
 	static class DefaultWindowSurfaceFactory implements EGLWindowSurfaceFactory {
 
-		public EGLSurface createWindowSurface (EGL10 egl, EGLDisplay display, EGLConfig config, Object nativeWindow) {
-			return egl.eglCreateWindowSurface(display, config, nativeWindow, null);
+//		public EGLSurface createWindowSurface (EGL10 egl, EGLDisplay display, EGLConfig config, Object nativeWindow) {
+//			return egl.eglCreateWindowSurface(display, config, nativeWindow, null);
+//		}
+//
+//		public void destroySurface (EGL10 egl, EGLDisplay display, EGLSurface surface) {
+//			egl.eglDestroySurface(display, surface);
+//		}
+		
+		
+		public EGLSurface createWindowSurface(EGL10 egl, EGLDisplay
+				display, EGLConfig config, Object nativeWindow) {
+			// this is a bit of a hack to work around Droid init problems - if you don't have this, it'll get hung up on orientation changes
+			EGLSurface eglSurface = null;
+			while (eglSurface == null) {
+				try {
+					eglSurface = egl.eglCreateWindowSurface(display,
+							config, nativeWindow, null);
+				} catch (Throwable t) {
+				} finally {
+					if (eglSurface == null) {
+						try {
+							Thread.sleep(10);
+						} catch (InterruptedException t) {
+						}
+					}
+				}
+			}
+			return eglSurface;
 		}
 
-		public void destroySurface (EGL10 egl, EGLDisplay display, EGLSurface surface) {
+		public void destroySurface(EGL10 egl, EGLDisplay display, EGLSurface surface) {
 			egl.eglDestroySurface(display, surface);
 		}
+		
 	}
 
 	private static abstract class BaseConfigChooser implements EGLConfigChooser {
@@ -884,8 +931,8 @@ public class GLBaseSurfaceView extends GLSurfaceView implements SurfaceHolder.Ca
 							}
 
 							// By design, this is the only place in a GLThread thread where we wait().
-							if (LOG_THREADS) {
-								Log.i("GLThread", "waiting tid=" + getId());
+							if (LOG_THREADS) { 
+								//Log.i("GLThread", "waiting tid=" + getId());
 							}
 							sGLThreadManager.wait();
 						}
@@ -915,7 +962,7 @@ public class GLBaseSurfaceView extends GLSurfaceView implements SurfaceHolder.Ca
 					}
 
 					if (LOG_RENDERER) {
-						Log.w("GLThread", "onDrawFrame");
+						//Log.w("GLThread", "onDrawFrame");
 					}
 					mRenderer.onDrawFrame(gl);
 					if (!mEglHelper.swap()) {
@@ -961,7 +1008,7 @@ public class GLBaseSurfaceView extends GLSurfaceView implements SurfaceHolder.Ca
 			}
 		}
 
-		public void surfaceCreated () {
+		public void surfaceCreated () {			
 			synchronized (sGLThreadManager) {
 				if (LOG_THREADS) {
 					Log.i("GLThread", "surfaceCreated tid=" + getId());
@@ -978,7 +1025,7 @@ public class GLBaseSurfaceView extends GLSurfaceView implements SurfaceHolder.Ca
 				}
 				mHasSurface = false;
 				sGLThreadManager.notifyAll();
-				while ((!mWaitingForSurface) && (!mExited)) {
+				while ((!mWaitingForSurface) && (isAlive()) && (!mExited)) {
 					try {
 						sGLThreadManager.wait();
 					} catch (InterruptedException e) {
@@ -1013,16 +1060,16 @@ public class GLBaseSurfaceView extends GLSurfaceView implements SurfaceHolder.Ca
 				sGLThreadManager.notifyAll();
 
 				// Wait for thread to react to resize and render a frame
-				while (!mExited && !mPaused && !mRenderComplete) {
-					if (LOG_SURFACE) {
-						Log.i("Main thread", "onWindowResize waiting for render complete.");
-					}
-					try {
-						sGLThreadManager.wait();
-					} catch (InterruptedException ex) {
-						Thread.currentThread().interrupt();
-					}
-				}
+//				while (!mExited && !mPaused && !mRenderComplete) {
+//					if (LOG_SURFACE) {
+//						//Log.i("Main thread", "onWindowResize waiting for render complete.");
+//					}
+//					try {
+//						sGLThreadManager.wait();
+//					} catch (InterruptedException ex) {
+//						Thread.currentThread().interrupt();
+//					}
+//				}
 			}
 		}
 

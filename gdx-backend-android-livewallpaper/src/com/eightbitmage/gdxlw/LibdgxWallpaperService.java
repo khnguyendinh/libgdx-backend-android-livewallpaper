@@ -16,18 +16,20 @@
 
 package com.eightbitmage.gdxlw;
 
-import net.rbgrn.android.glwallpaperservice.GLWallpaperService;
 import android.app.WallpaperManager;
 import android.os.Bundle;
+import android.service.wallpaper.WallpaperService;
+import android.util.Log;
 import android.view.SurfaceHolder;
 
 import com.badlogic.gdx.backends.android.livewallpaper.AndroidApplicationLW;
 import com.badlogic.gdx.backends.android.livewallpaper.AndroidGraphicsLW;
 import com.badlogic.gdx.backends.android.livewallpaper.AndroidInputLW;
+import com.badlogic.gdx.backends.android.livewallpaper.surfaceview.GLBaseSurfaceView;
 
-public abstract class LibdgxWallpaperService extends GLWallpaperService {
+public abstract class LibdgxWallpaperService extends WallpaperService {
 
-	//private final String TAG = "GDX-LW";
+	private final String TAG = "GDX-LW";
 
 	public LibdgxWallpaperService() {
 		super();
@@ -37,29 +39,47 @@ public abstract class LibdgxWallpaperService extends GLWallpaperService {
 
 	public Engine onCreateEngine() {
 
-		// Log.d(TAG, " > onCreateEngine()");
+		Log.d(TAG, " > onCreateEngine()");
 
 		MyEngine engine = new MyEngine(this);
 		return engine;
 
 	}
 
+	@Override
+	public void onCreate() {
+
+		Log.d(TAG, " > LibdgxWallpaperService - onCreate()");
+
+		super.onCreate();
+	}
+
+	@Override
+	public void onDestroy() {
+
+		Log.d(TAG, " > LibdgxWallpaperService - onDestroy()");
+
+		super.onDestroy();
+	}
+
 	// ~~~~~~~~ MyEngine ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	class MyEngine extends GLEngine {
+	class MyEngine extends Engine {
 
 		AndroidApplicationLW app;
+		GLBaseSurfaceView view;
 
 		public MyEngine(LibdgxWallpaperService libdgxWallpaperService) {
 			super();
 
-			// Log.d(TAG, " > MyEngine() " + this.hashCode());
+			Log.d(TAG, " > MyEngine() " + this.hashCode());
 
-			app = new AndroidApplicationLW(libdgxWallpaperService);
+			app = new AndroidApplicationLW(libdgxWallpaperService, this);
 			libdgxWallpaperService.initialize(app);
+			view = ((AndroidGraphicsLW) app.getGraphics()).getView();
 
-			setRenderer((AndroidGraphicsLW) app.getGraphics());
-			setRenderMode(RENDERMODE_CONTINUOUSLY);
+			// setRenderer((AndroidGraphicsLW) app.getGraphics());
+			// setRenderMode(RENDERMODE_CONTINUOUSLY);
 		}
 
 		@Override
@@ -67,8 +87,8 @@ public abstract class LibdgxWallpaperService extends GLWallpaperService {
 				final int pY, final int pZ, final Bundle pExtras,
 				final boolean pResultRequested) {
 
-			// Log.d(TAG, " > onCommand(" + pAction + " " + pX + " " + pY + " "
-			// + pZ + " " + pExtras + " " + pResultRequested + ")");
+			Log.d(TAG, " > onCommand(" + pAction + " " + pX + " " + pY + " "
+					+ pZ + " " + pExtras + " " + pResultRequested + ")");
 
 			if (pAction.equals(WallpaperManager.COMMAND_TAP)) {
 				((AndroidInputLW) app.getInput()).onTap(pX, pY);
@@ -80,45 +100,57 @@ public abstract class LibdgxWallpaperService extends GLWallpaperService {
 					pResultRequested);
 		}
 
-		@Override
 		public void onResume() {
 
-			// Log.d(TAG, " > onResume() "+ this.hashCode());
+			Log.d(TAG, " > onResume() " + this.hashCode());
 
 			app.onResume();
-			super.onResume();
+			// view.onResume();
+			// super.onResume();
+		}
+
+		public void onPause() {
+
+			Log.d(TAG, " > onPause() " + this.hashCode());
+
+			app.onPause();
+			// view.onPause();
+			// super.onPause();
+
 		}
 
 		@Override
-		public void onPause() {
-
-			// Log.d(TAG, " > onPause() "+ this.hashCode());
-
-			app.onPause();
-			super.onPause();
-
-		}
-
 		public void onDestroy() {
 
-			// Log.d(TAG, " > onDestroy() "+ this.hashCode());
+			Log.d(TAG, " > onDestroy() " + this.hashCode());
 
 			app.onDestroy();
+			view.onDestroy();
 			super.onDestroy();
+
 		}
 
 		@Override
 		public void onVisibilityChanged(boolean visible) {
 
-			// Log.d(TAG, " > onVisibilityChanged(" + visible + ")");
+			Log.d(TAG,
+					" > onVisibilityChanged(" + visible + ") "
+							+ this.hashCode());
+
+			if (visible) {
+				onResume();
+			} else {
+				onPause();
+			}
 
 			super.onVisibilityChanged(visible);
+
 		}
 
 		@Override
 		public void onCreate(SurfaceHolder surfaceHolder) {
 
-			// Log.d(TAG, " > onCreate()");
+			Log.d(TAG, " > onCreate() " + this.hashCode());
 
 			super.onCreate(surfaceHolder);
 		}
@@ -127,7 +159,11 @@ public abstract class LibdgxWallpaperService extends GLWallpaperService {
 		public void onSurfaceChanged(SurfaceHolder holder, int format,
 				int width, int height) {
 
-			// Log.d(TAG, " > onSurfaceChanged() " + this.isPreview() + " " +
+			Log.d(TAG,
+					" > onSurfaceChanged() " + this.isPreview() + " "
+							+ this.hashCode());
+
+			// view.surfaceChanged(holder, format, width, height);
 
 			super.onSurfaceChanged(holder, format, width, height);
 		}
@@ -135,7 +171,9 @@ public abstract class LibdgxWallpaperService extends GLWallpaperService {
 		@Override
 		public void onSurfaceCreated(SurfaceHolder holder) {
 
-			// Log.d(TAG, " > onSurfaceCreated() " + this.hashCode());
+			Log.d(TAG, " > onSurfaceCreated() " + this.hashCode());
+
+			// view.surfaceCreated(holder);
 
 			super.onSurfaceCreated(holder);
 		}
@@ -143,7 +181,9 @@ public abstract class LibdgxWallpaperService extends GLWallpaperService {
 		@Override
 		public void onSurfaceDestroyed(SurfaceHolder holder) {
 
-			// Log.d(TAG, " > onSurfaceDestroyed() " + this.hashCode());
+			Log.d(TAG, " > onSurfaceDestroyed() " + this.hashCode());
+
+			// view.surfaceDestroyed(holder);
 
 			super.onSurfaceDestroyed(holder);
 		}
