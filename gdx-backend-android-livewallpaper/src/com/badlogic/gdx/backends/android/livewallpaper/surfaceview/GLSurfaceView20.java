@@ -58,8 +58,8 @@ public class GLSurfaceView20 extends DefaultGLSurfaceView {
 
     final ResolutionStrategy resolutionStrategy;
   
-    public GLSurfaceView20(AndroidApplicationLW app, ResolutionStrategy resolutionStrategy) {
-        super(app.getEngine(), resolutionStrategy);
+    public GLSurfaceView20(Engine engine, ResolutionStrategy resolutionStrategy) {
+        super(engine, resolutionStrategy);
         this.resolutionStrategy = resolutionStrategy;
         init(false, 16, 0);
     }
@@ -91,6 +91,7 @@ public class GLSurfaceView20 extends DefaultGLSurfaceView {
         /*
            * Setup the context factory for 2.0 rendering. See ContextFactory class definition below
            */
+        
         setEGLContextFactory(new ContextFactory());
 
         /*
@@ -104,9 +105,9 @@ public class GLSurfaceView20 extends DefaultGLSurfaceView {
     }
 
 
-   
+    
 
-	static class ContextFactory implements GLSurfaceView.EGLContextFactory {
+	static class ContextFactory implements EGLContextFactory {
         private static int EGL_CONTEXT_CLIENT_VERSION = 0x3098;
 
         public EGLContext createContext(EGL10 egl, EGLDisplay display, EGLConfig eglConfig) {
@@ -121,6 +122,7 @@ public class GLSurfaceView20 extends DefaultGLSurfaceView {
         public void destroyContext(EGL10 egl, EGLDisplay display, EGLContext context) {
             egl.eglDestroyContext(display, context);
         }
+       		
     }
 
     static void checkEglError(String prompt, EGL10 egl) {

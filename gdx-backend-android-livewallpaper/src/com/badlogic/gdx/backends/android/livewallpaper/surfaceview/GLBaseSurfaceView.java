@@ -25,7 +25,6 @@ import javax.microedition.khronos.egl.EGLSurface;
 import javax.microedition.khronos.opengles.GL;
 import javax.microedition.khronos.opengles.GL10;
 
-import android.content.Context;
 import android.opengl.GLSurfaceView.EGLConfigChooser;
 import android.opengl.GLSurfaceView.Renderer;
 import android.service.wallpaper.WallpaperService.Engine;
@@ -136,6 +135,11 @@ import com.badlogic.gdx.backends.android.surfaceview.GLDebugHelper;
 public class GLBaseSurfaceView 
 	//extends GLSurfaceView 
 		implements SurfaceHolder.Callback {
+	
+	
+	private final String TAG = "GLBaseSurfaceView";
+
+	
 	private final static boolean LOG_THREADS = true;
 	private final static boolean LOG_SURFACE = true;
 	private final static boolean LOG_RENDERER = true;
@@ -199,6 +203,7 @@ public class GLBaseSurfaceView
 		
 		SurfaceHolder holder = getHolder();
 		holder.addCallback(this);
+		
 	}
 	
 	public SurfaceHolder getHolder() {
@@ -300,9 +305,9 @@ public class GLBaseSurfaceView
 	 * <p>
 	 * If this method is not called, then by default a window surface will be created with a null attribute list.
 	 */
-	public void setEGLWindowSurfaceFactory (EGLWindowSurfaceFactory factory) {
+	public void setEGLWindowSurfaceFactory (ContextFactory contextFactory) {
 		checkRenderThreadState();
-		mEGLWindowSurfaceFactory = factory;
+		mEGLWindowSurfaceFactory = (EGLWindowSurfaceFactory) contextFactory;
 	}
 
 	/**
@@ -390,6 +395,9 @@ public class GLBaseSurfaceView
 	 * GLSurfaceView.
 	 */
 	public void surfaceCreated (SurfaceHolder holder) {
+		
+		Log.d(TAG, " > surfaceCreated() " + this.hashCode());
+		
 		mGLThread.surfaceCreated();
 	}
 
@@ -399,6 +407,9 @@ public class GLBaseSurfaceView
 	 */
 	public void surfaceDestroyed (SurfaceHolder holder) {
 		// Surface will be destroyed when we return
+		
+		Log.d(TAG, " > surfaceDestroyed() " + this.hashCode());
+		
 		mGLThread.surfaceDestroyed();
 	}
 
@@ -407,6 +418,9 @@ public class GLBaseSurfaceView
 	 * GLSurfaceView.
 	 */
 	public void surfaceChanged (SurfaceHolder holder, int format, int w, int h) {
+		
+		Log.d(TAG, " > surfaceChanged() " + this.hashCode());
+		
 		mGLThread.onWindowResize(w, h);
 	}
 
@@ -415,6 +429,9 @@ public class GLBaseSurfaceView
 	 * Calling this method will pause the rendering thread. Must not be called before a renderer has been set.
 	 */
 	public void onPause () {
+		
+		Log.d(TAG, " > onPause() " + this.hashCode());
+		
 		mGLThread.onPause();
 	}
 
@@ -424,6 +441,9 @@ public class GLBaseSurfaceView
 	 * has been set.
 	 */
 	public void onResume () {
+		
+		Log.d(TAG, " > onResume() " + this.hashCode());
+		
 		mGLThread.onResume();
 	}
 
@@ -437,6 +457,9 @@ public class GLBaseSurfaceView
 	}
 	
 	public void onDestroy() {
+		
+		Log.d(TAG, " > onDestroy() " + this.hashCode());
+		
 		mGLThread.requestExitAndWait();
 	}
 
@@ -1037,6 +1060,9 @@ public class GLBaseSurfaceView
 
 		public void onPause () {
 			synchronized (sGLThreadManager) {
+				if (LOG_THREADS) {
+					Log.i("GLThread", "onPause tid=" + getId());
+				}
 				mPaused = true;
 				sGLThreadManager.notifyAll();
 			}
@@ -1044,6 +1070,9 @@ public class GLBaseSurfaceView
 
 		public void onResume () {
 			synchronized (sGLThreadManager) {
+				if (LOG_THREADS) {
+					Log.i("GLThread", "onResume tid=" + getId());
+				}
 				mPaused = false;
 				mRequestRender = true;
 				sGLThreadManager.notifyAll();
@@ -1052,6 +1081,9 @@ public class GLBaseSurfaceView
 
 		public void onWindowResize (int w, int h) {
 			synchronized (sGLThreadManager) {
+				if (LOG_THREADS) {
+					Log.i("GLThread", "onWindowResize tid=" + getId());
+				}				
 				mWidth = w;
 				mHeight = h;
 				mSizeChanged = true;
@@ -1060,16 +1092,18 @@ public class GLBaseSurfaceView
 				sGLThreadManager.notifyAll();
 
 				// Wait for thread to react to resize and render a frame
-//				while (!mExited && !mPaused && !mRenderComplete) {
-//					if (LOG_SURFACE) {
-//						//Log.i("Main thread", "onWindowResize waiting for render complete.");
-//					}
-//					try {
-//						sGLThreadManager.wait();
-//					} catch (InterruptedException ex) {
-//						Thread.currentThread().interrupt();
-//					}
-//				}
+				while (!mExited && !mPaused && !mRenderComplete) {
+					
+					if (LOG_SURFACE) {
+						//Log.i("Main thread", "onWindowResize waiting for render complete.");
+					}
+					try {
+						Thread.sleep(200);
+						sGLThreadManager.wait();
+					} catch (InterruptedException ex) {
+						Thread.currentThread().interrupt();
+					}
+				}
 			}
 		}
 
@@ -1077,6 +1111,9 @@ public class GLBaseSurfaceView
 			// don't call this from GLThread thread or it is a guaranteed
 			// deadlock!
 			synchronized (sGLThreadManager) {
+				if (LOG_THREADS) {
+					Log.i("GLThread", "requestExitAndWait tid=" + getId());
+				}
 				mShouldExit = true;
 				sGLThreadManager.notifyAll();
 				while (!mExited) {
@@ -1185,7 +1222,7 @@ public class GLBaseSurfaceView
 				notifyAll();
 				return true;
 			}
-			return false;
+			return false; 
 		}
 
 		/*

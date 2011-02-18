@@ -168,10 +168,10 @@ public class AndroidApplicationLW implements Application {
 
 	public void onDestroy() {
 		
-		if (graphics != null) {
-			graphics.clearManagedCaches();
-			graphics.destroy();
-		}
+		//if (graphics != null) {
+		//	graphics.clearManagedCaches();
+		//	graphics.destroy();
+		//}
 		
 		if (audio != null) {
 			audio.dispose();

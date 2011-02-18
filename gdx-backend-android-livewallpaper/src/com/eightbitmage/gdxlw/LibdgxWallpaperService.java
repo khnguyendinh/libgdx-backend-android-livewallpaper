@@ -30,6 +30,9 @@ import com.badlogic.gdx.backends.android.livewallpaper.surfaceview.GLBaseSurface
 public abstract class LibdgxWallpaperService extends WallpaperService {
 
 	private final String TAG = "GDX-LW";
+	
+	MyEngine oldEngine;
+	MyEngine activeEngine;
 
 	public LibdgxWallpaperService() {
 		super();
@@ -41,8 +44,7 @@ public abstract class LibdgxWallpaperService extends WallpaperService {
 
 		Log.d(TAG, " > onCreateEngine()");
 
-		MyEngine engine = new MyEngine(this);
-		return engine;
+		return new MyEngine(this);
 
 	}
 
@@ -105,7 +107,7 @@ public abstract class LibdgxWallpaperService extends WallpaperService {
 			Log.d(TAG, " > onResume() " + this.hashCode());
 
 			app.onResume();
-			// view.onResume();
+			 view.onResume();
 			// super.onResume();
 		}
 
@@ -114,7 +116,7 @@ public abstract class LibdgxWallpaperService extends WallpaperService {
 			Log.d(TAG, " > onPause() " + this.hashCode());
 
 			app.onPause();
-			// view.onPause();
+			 view.onPause();
 			// super.onPause();
 
 		}
@@ -124,8 +126,8 @@ public abstract class LibdgxWallpaperService extends WallpaperService {
 
 			Log.d(TAG, " > onDestroy() " + this.hashCode());
 
-			app.onDestroy();
 			view.onDestroy();
+			app.onDestroy();
 			super.onDestroy();
 
 		}
@@ -153,6 +155,11 @@ public abstract class LibdgxWallpaperService extends WallpaperService {
 			Log.d(TAG, " > onCreate() " + this.hashCode());
 
 			super.onCreate(surfaceHolder);
+			
+			if (oldEngine != null) {
+				oldEngine.view.onPause();
+			}
+			oldEngine = this;
 		}
 
 		@Override
@@ -163,7 +170,7 @@ public abstract class LibdgxWallpaperService extends WallpaperService {
 					" > onSurfaceChanged() " + this.isPreview() + " "
 							+ this.hashCode());
 
-			// view.surfaceChanged(holder, format, width, height);
+			//view.surfaceChanged(holder, format, width, height);
 
 			super.onSurfaceChanged(holder, format, width, height);
 		}
@@ -173,7 +180,7 @@ public abstract class LibdgxWallpaperService extends WallpaperService {
 
 			Log.d(TAG, " > onSurfaceCreated() " + this.hashCode());
 
-			// view.surfaceCreated(holder);
+			//view.surfaceCreated(holder);
 
 			super.onSurfaceCreated(holder);
 		}
@@ -183,7 +190,7 @@ public abstract class LibdgxWallpaperService extends WallpaperService {
 
 			Log.d(TAG, " > onSurfaceDestroyed() " + this.hashCode());
 
-			// view.surfaceDestroyed(holder);
+			//view.surfaceDestroyed(holder);
 
 			super.onSurfaceDestroyed(holder);
 		}

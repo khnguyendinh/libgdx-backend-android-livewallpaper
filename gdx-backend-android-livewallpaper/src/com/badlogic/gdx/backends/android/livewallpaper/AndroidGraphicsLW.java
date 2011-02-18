@@ -20,9 +20,9 @@ import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.egl.EGLContext;
 import javax.microedition.khronos.egl.EGLDisplay;
 
-import net.rbgrn.android.glwallpaperservice.GLWallpaperService.Renderer;
 import android.content.Context;
 import android.opengl.GLSurfaceView.EGLConfigChooser;
+import android.opengl.GLSurfaceView.Renderer;
 import android.os.Build;
 import android.util.DisplayMetrics;
 import android.view.Display;
@@ -30,6 +30,7 @@ import android.view.WindowManager;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Graphics;
+import com.badlogic.gdx.backends.android.AndroidGL20;
 import com.badlogic.gdx.backends.android.livewallpaper.surfaceview.DefaultGLSurfaceView;
 import com.badlogic.gdx.backends.android.livewallpaper.surfaceview.GLBaseSurfaceView;
 import com.badlogic.gdx.backends.android.livewallpaper.surfaceview.GLSurfaceView20;
@@ -49,8 +50,7 @@ import com.badlogic.gdx.math.WindowedMean;
  * 
  * @author mzechner
  */
-public final class AndroidGraphicsLW implements Graphics, Renderer,
-		android.opengl.GLSurfaceView.Renderer {
+public final class AndroidGraphicsLW implements Graphics, Renderer {
 
 	final GLBaseSurfaceView view;
 
@@ -94,20 +94,13 @@ public final class AndroidGraphicsLW implements Graphics, Renderer,
 		EGLConfigChooser configChooser = getEglConfigChooser();
 
 		if (useGL2 && checkGL20()) {
-			GLSurfaceView20 view = new GLSurfaceView20(app, resolutionStrategy);
+			GLSurfaceView20 view = new GLSurfaceView20(app.getEngine(),
+					resolutionStrategy);
 			if (configChooser != null)
 				view.setEGLConfigChooser(configChooser);
 			view.setRenderer(this);
 			return view;
 		} else {
-			// if (Integer.parseInt(android.os.Build.VERSION.SDK) <= 4) {
-			// GLSurfaceViewCupcake view = new GLSurfaceViewCupcake(activity,
-			// resolutionStrategy);
-			// if (configChooser != null)
-			// view.setEGLConfigChooser(configChooser);
-			// //view.setRenderer(this);
-			// return view;
-			// } else {
 			GLBaseSurfaceView view = new DefaultGLSurfaceView(app.getEngine(),
 					resolutionStrategy);
 			if (configChooser != null)
@@ -248,10 +241,10 @@ public final class AndroidGraphicsLW implements Graphics, Renderer,
 		boolean isGL20 = checkGL20();
 		Gdx.app.log("AndroidGraphics", "GL20: " + isGL20);
 
-//		if (isGL20) {
-//			gl20 = new AndroidGL20();
-//			this.gl = gl20;
-//		} else {
+		if (view instanceof GLSurfaceView20) {
+			gl20 = new AndroidGL20();
+			this.gl = gl20;
+		} else {
 			gl10 = new AndroidGL10(gl);
 			this.gl = gl10;
 			if (gl instanceof javax.microedition.khronos.opengles.GL11) {
@@ -265,7 +258,7 @@ public final class AndroidGraphicsLW implements Graphics, Renderer,
 					gl10 = gl11;
 				}
 			}
-//		}
+		}
 
 		Gdx.gl = this.gl;
 		Gdx.gl10 = gl10;
@@ -362,12 +355,12 @@ public final class AndroidGraphicsLW implements Graphics, Renderer,
 		synchronized (synch) {
 			running = false;
 			pause = true;
-			while (pause) {
-				try {
-					synch.wait();
-				} catch (InterruptedException ignored) {
-				}
-			}
+//			while (pause) {
+//				try {
+//					synch.wait();
+//				} catch (InterruptedException ignored) {
+//				}
+//			}
 		}
 	}
 
@@ -376,12 +369,13 @@ public final class AndroidGraphicsLW implements Graphics, Renderer,
 			running = false;
 			destroy = true;
 
-			while (destroy) {
-				try {
-					synch.wait();
-				} catch (InterruptedException ex) {
-				}
-			}
+			// TODO: Why was the wait here? Causes deadlock!?!
+			// while (destroy) {
+			// try {
+			// synch.wait();
+			// } catch (InterruptedException ex) {
+			// }
+			// }
 		}
 	}
 
@@ -426,7 +420,10 @@ public final class AndroidGraphicsLW implements Graphics, Renderer,
 
 		// HACK: added null check to handle set wallpaper from preview null
 		// error in renderer
-		if (lrunning && Gdx.graphics.getGL10() != null) {
+		if (lrunning
+				&& (Gdx.graphics.getGL10() != null
+						|| Gdx.graphics.getGL11() != null || Gdx.graphics
+						.getGL20() != null)) {
 			app.input.processEvents();
 			app.listener.render();
 		}
