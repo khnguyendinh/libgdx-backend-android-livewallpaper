@@ -140,12 +140,6 @@ public class AndroidApplicationLW implements Application {
 	public void onPause() {
 		graphics.pause();
 
-		//if (isFinishing()) {
-		//	graphics.clearManagedCaches();
-		//	graphics.destroy();
-		//}
-
-
 		if (audio != null)
 			audio.pause();
 	}
@@ -167,12 +161,6 @@ public class AndroidApplicationLW implements Application {
 	}
 
 	public void onDestroy() {
-		
-		//if (graphics != null) {
-		//	graphics.clearManagedCaches();
-		//	graphics.destroy();
-		//}
-		
 		if (audio != null) {
 			audio.dispose();
 		}		

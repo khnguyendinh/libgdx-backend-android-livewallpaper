@@ -36,7 +36,6 @@ import android.opengl.GLSurfaceView;
 import android.service.wallpaper.WallpaperService.Engine;
 import android.util.Log;
 
-import com.badlogic.gdx.backends.android.livewallpaper.AndroidApplicationLW;
 import com.badlogic.gdx.backends.android.surfaceview.ResolutionStrategy;
 
 /**
@@ -70,12 +69,6 @@ public class GLSurfaceView20 extends DefaultGLSurfaceView {
         init(translucent, depth, stencil);
 
     }
-
-//    @Override
-//    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-//        ResolutionStrategy.MeasuredDimension measures = resolutionStrategy.calcMeasures(widthMeasureSpec, heightMeasureSpec);
-//        setMeasuredDimension(measures.width, measures.height);
-//    }
 
     private void init(boolean translucent, int depth, int stencil) {
 

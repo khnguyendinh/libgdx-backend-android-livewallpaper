@@ -1,15 +1,13 @@
-package com.eightbitmage.gdxlw;
+package com.eightbitmage.gdxlw.test;
 
 import com.badlogic.gdx.backends.android.livewallpaper.AndroidApplicationLW;
-import com.badlogic.gdx.tests.TileTest;
+import com.eightbitmage.gdxlw.LibdgxWallpaperService;
 
 public class TestLibdgxWallpaperService extends LibdgxWallpaperService {
 
 	@Override
 	protected void initialize(AndroidApplicationLW app) {
-		//app.initialize(new SimpleTest(), false);
-		app.initialize(new TileTest(), true); 
+		app.initialize(new PongTest(), true); 
 	}
-	
 
 }
