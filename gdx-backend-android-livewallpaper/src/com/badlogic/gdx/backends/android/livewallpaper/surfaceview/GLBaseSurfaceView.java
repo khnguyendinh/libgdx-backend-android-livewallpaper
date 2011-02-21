@@ -133,16 +133,15 @@ import com.badlogic.gdx.backends.android.surfaceview.GLDebugHelper;
  * 
  */
 public class GLBaseSurfaceView 
-	//extends GLSurfaceView 
 		implements SurfaceHolder.Callback {
 	
 	
 	private final String TAG = "GLBaseSurfaceView";
-
 	
-	private final static boolean LOG_THREADS = true;
-	private final static boolean LOG_SURFACE = true;
-	private final static boolean LOG_RENDERER = true;
+	private final static boolean LOG_VIEW = false;
+	private final static boolean LOG_THREADS = false;
+	private final static boolean LOG_SURFACE = false;
+	private final static boolean LOG_RENDERER = false;
 	// Work-around for bug 2263168
 	private final static boolean DRAW_TWICE_AFTER_SIZE_CHANGED = true;
 	/**
@@ -177,13 +176,12 @@ public class GLBaseSurfaceView
 	 * @see #setDebugFlags
 	 */
 	public final static int DEBUG_LOG_GL_CALLS = 2;
-	private Engine engine;
+	protected Engine engine;
 
 	/**
 	 * Standard View constructor. In order to render something, you must call {@link #setRenderer} to register a renderer.
 	 */
 	public GLBaseSurfaceView (Engine engine) {
-		//super(context);
 		this.engine = engine;
 		init();
 	}
@@ -192,7 +190,6 @@ public class GLBaseSurfaceView
 	 * Standard View constructor. In order to render something, you must call {@link #setRenderer} to register a renderer.
 	 */
 	public GLBaseSurfaceView (Engine engine, AttributeSet attrs) {
-		//super(context, attrs);
 		this.engine = engine;
 		init();
 	}
@@ -396,7 +393,9 @@ public class GLBaseSurfaceView
 	 */
 	public void surfaceCreated (SurfaceHolder holder) {
 		
-		Log.d(TAG, " > surfaceCreated() " + this.hashCode());
+		if (LOG_VIEW) {
+			Log.d(TAG, " > surfaceCreated() " + this.hashCode());
+		}
 		
 		mGLThread.surfaceCreated();
 	}
@@ -408,7 +407,9 @@ public class GLBaseSurfaceView
 	public void surfaceDestroyed (SurfaceHolder holder) {
 		// Surface will be destroyed when we return
 		
-		Log.d(TAG, " > surfaceDestroyed() " + this.hashCode());
+		if (LOG_VIEW) {
+			Log.d(TAG, " > surfaceDestroyed() " + this.hashCode());
+		}
 		
 		mGLThread.surfaceDestroyed();
 	}
@@ -419,7 +420,9 @@ public class GLBaseSurfaceView
 	 */
 	public void surfaceChanged (SurfaceHolder holder, int format, int w, int h) {
 		
-		Log.d(TAG, " > surfaceChanged() " + this.hashCode());
+		if (LOG_VIEW) {
+			Log.d(TAG, " > surfaceChanged() " + this.hashCode());
+		}
 		
 		mGLThread.onWindowResize(w, h);
 	}
@@ -430,7 +433,9 @@ public class GLBaseSurfaceView
 	 */
 	public void onPause () {
 		
-		Log.d(TAG, " > onPause() " + this.hashCode());
+		if (LOG_VIEW) {
+			Log.d(TAG, " > onPause() " + this.hashCode());
+		}
 		
 		mGLThread.onPause();
 	}
@@ -442,7 +447,9 @@ public class GLBaseSurfaceView
 	 */
 	public void onResume () {
 		
-		Log.d(TAG, " > onResume() " + this.hashCode());
+		if (LOG_VIEW) {
+			Log.d(TAG, " > onResume() " + this.hashCode());
+		}
 		
 		mGLThread.onResume();
 	}
@@ -458,20 +465,12 @@ public class GLBaseSurfaceView
 	
 	public void onDestroy() {
 		
-		Log.d(TAG, " > onDestroy() " + this.hashCode());
+		if (LOG_VIEW) {
+			Log.d(TAG, " > onDestroy() " + this.hashCode());
+		}
 		
 		mGLThread.requestExitAndWait();
 	}
-
-	/**
-	 * This method is used as part of the View class and is not normally called or subclassed by clients of GLSurfaceView. Must not
-	 * be called before a renderer has been set.
-	 */
-//	@Override protected void 
-//	onDetachedFromWindow () {
-//		super.onDetachedFromWindow();
-//		mGLThread.requestExitAndWait();
-//	}
 
 	// ----------------------------------------------------------------------
 
@@ -1183,7 +1182,9 @@ public class GLBaseSurfaceView
 
 		private void flushBuilder () {
 			if (mBuilder.length() > 0) {
-				Log.v("GLSurfaceView", mBuilder.toString());
+				if (LOG_SURFACE) {
+					Log.v("GLSurfaceView", mBuilder.toString());
+				}
 				mBuilder.delete(0, mBuilder.length());
 			}
 		}

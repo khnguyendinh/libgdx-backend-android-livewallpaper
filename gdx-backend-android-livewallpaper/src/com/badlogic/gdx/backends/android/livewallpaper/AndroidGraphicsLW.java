@@ -84,7 +84,6 @@ public final class AndroidGraphicsLW implements Graphics, Renderer {
 			boolean useGL2IfAvailable, ResolutionStrategy resolutionStrategy) {
 
 		view = createGLSurfaceView(app, useGL2IfAvailable, resolutionStrategy);
-
 		this.app = app;
 
 	}
@@ -109,7 +108,6 @@ public final class AndroidGraphicsLW implements Graphics, Renderer {
 			view.setRenderer(this);
 			return view;
 		}
-		// }
 	}
 
 	private EGLConfigChooser getEglConfigChooser() {
@@ -355,6 +353,7 @@ public final class AndroidGraphicsLW implements Graphics, Renderer {
 		synchronized (synch) {
 			running = false;
 			pause = true;
+			// TODO: Why was the wait here? Causes deadlock!?!
 //			while (pause) {
 //				try {
 //					synch.wait();
