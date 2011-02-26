@@ -12,8 +12,9 @@ import com.badlogic.gdx.graphics.VertexAttributes.Usage;
 import com.badlogic.gdx.graphics.g2d.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
+import com.eightbitmage.gdxlw.LibdgxWallpaperInterface;
 
-public class PongTest implements ApplicationListener, InputProcessor {
+public class PongTest implements ApplicationListener, InputProcessor, LibdgxWallpaperInterface {
 
 	/** the camera **/
 	private OrthographicCamera camera;
@@ -365,5 +366,18 @@ public class PongTest implements ApplicationListener, InputProcessor {
 		// if (touchX > rightPaddle.x)
 		rightPaddle.y = touchY;
 		return false;
+	}
+
+	@Override
+	public void offsetChange(float xOffset, float yOffset, float xOffsetStep,
+			float yOffsetStep, int xPixelOffset, int yPixelOffset) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setIsPreview(boolean isPreview) {
+		// TODO Auto-generated method stub
+		
 	}
 }
