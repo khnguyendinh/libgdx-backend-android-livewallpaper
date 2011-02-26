@@ -26,52 +26,58 @@ import com.badlogic.gdx.backends.android.livewallpaper.AndroidInputLW;
 import com.badlogic.gdx.backends.android.livewallpaper.surfaceview.GLBaseSurfaceView;
 
 public abstract class LibdgxWallpaperService extends WallpaperService {
-	
+
 	private final String TAG = "GDX-LW-Service";
-	
+
 	private LibdgxWallpaperEngine previousEngine;
-	protected LibdgxWallpaperApp libdgxWallpaperListener;
-	
+
 	private boolean DEBUG = false;
 
 	public LibdgxWallpaperService() {
 		super();
 	}
 
-	abstract protected void initialize(AndroidApplicationLW app);
+	abstract protected LibdgxWallpaperInterface initialize(AndroidApplicationLW app);
 
 	@Override
 	public void onCreate() {
-		if (DEBUG) Log.d(TAG, " > LibdgxWallpaperService - onCreate()");
+		if (DEBUG)
+			Log.d(TAG, " > LibdgxWallpaperService - onCreate()");
 		super.onCreate();
 	}
 
 	@Override
 	public Engine onCreateEngine() {
-		if (DEBUG) Log.d(TAG, " > onCreateEngine()");
+		if (DEBUG)
+			Log.d(TAG, " > onCreateEngine()");
 		return new LibdgxWallpaperEngine(this);
 	}
 
 	@Override
 	public void onDestroy() {
-		if (DEBUG) Log.d(TAG, " > LibdgxWallpaperService - onDestroy()");
+		if (DEBUG)
+			Log.d(TAG, " > LibdgxWallpaperService - onDestroy()");
 		super.onDestroy();
 	}
-	
+
 	// ~~~~~~~~ MyEngine ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	class LibdgxWallpaperEngine extends Engine {
+	public class LibdgxWallpaperEngine extends Engine {
 
 		AndroidApplicationLW app;
+		LibdgxWallpaperInterface libdgxWallpaperApp;
 		GLBaseSurfaceView view;
 
-		public LibdgxWallpaperEngine(final LibdgxWallpaperService libdgxWallpaperService) {
+		public LibdgxWallpaperEngine(
+				final LibdgxWallpaperService libdgxWallpaperService) {
 			super();
 
-			if (DEBUG) Log.d(TAG, " > MyEngine() " + hashCode());
+			if (DEBUG)
+				Log.d(TAG, " > MyEngine() " + hashCode());
 
 			app = new AndroidApplicationLW(libdgxWallpaperService, this);
-			libdgxWallpaperService.initialize(app);
+			libdgxWallpaperApp = libdgxWallpaperService.initialize(app);
+
 			view = ((AndroidGraphicsLW) app.getGraphics()).getView();
 
 		}
@@ -81,8 +87,10 @@ public abstract class LibdgxWallpaperService extends WallpaperService {
 				final int pY, final int pZ, final Bundle pExtras,
 				final boolean pResultRequested) {
 
-			if (DEBUG) Log.d(TAG, " > onCommand(" + pAction + " " + pX + " " + pY + " "
-					+ pZ + " " + pExtras + " " + pResultRequested + ")");
+			if (DEBUG)
+				Log.d(TAG, " > onCommand(" + pAction + " " + pX + " " + pY
+						+ " " + pZ + " " + pExtras + " " + pResultRequested
+						+ ")");
 
 			if (pAction.equals(WallpaperManager.COMMAND_TAP)) {
 				((AndroidInputLW) app.getInput()).onTap(pX, pY);
@@ -97,7 +105,8 @@ public abstract class LibdgxWallpaperService extends WallpaperService {
 		@Override
 		public void onCreate(final SurfaceHolder surfaceHolder) {
 
-			if (DEBUG) Log.d(TAG, " > onCreate() " + hashCode());
+			if (DEBUG)
+				Log.d(TAG, " > onCreate() " + hashCode());
 
 			super.onCreate(surfaceHolder);
 
@@ -105,12 +114,15 @@ public abstract class LibdgxWallpaperService extends WallpaperService {
 				previousEngine.view.onPause();
 			}
 			previousEngine = this;
+
+			libdgxWallpaperApp.setIsPreview(this.isPreview());
 		}
 
 		@Override
 		public void onDestroy() {
 
-			if (DEBUG) Log.d(TAG, " > onDestroy() " + hashCode());
+			if (DEBUG)
+				Log.d(TAG, " > onDestroy() " + hashCode());
 
 			view.onDestroy();
 			app.onDestroy();
@@ -120,7 +132,8 @@ public abstract class LibdgxWallpaperService extends WallpaperService {
 
 		public void onPause() {
 
-			if (DEBUG) Log.d(TAG, " > onPause() " + hashCode());
+			if (DEBUG)
+				Log.d(TAG, " > onPause() " + hashCode());
 
 			app.onPause();
 			view.onPause();
@@ -129,7 +142,8 @@ public abstract class LibdgxWallpaperService extends WallpaperService {
 
 		public void onResume() {
 
-			if (DEBUG) Log.d(TAG, " > onResume() " + hashCode());
+			if (DEBUG)
+				Log.d(TAG, " > onResume() " + hashCode());
 
 			app.onResume();
 			view.onResume();
@@ -139,8 +153,9 @@ public abstract class LibdgxWallpaperService extends WallpaperService {
 		public void onSurfaceChanged(final SurfaceHolder holder,
 				final int format, final int width, final int height) {
 
-			if (DEBUG) Log.d(TAG, " > onSurfaceChanged() " + isPreview() + " "
-					+ hashCode());
+			if (DEBUG)
+				Log.d(TAG, " > onSurfaceChanged() " + isPreview() + " "
+						+ hashCode());
 
 			super.onSurfaceChanged(holder, format, width, height);
 		}
@@ -148,7 +163,8 @@ public abstract class LibdgxWallpaperService extends WallpaperService {
 		@Override
 		public void onSurfaceCreated(final SurfaceHolder holder) {
 
-			if (DEBUG) Log.d(TAG, " > onSurfaceCreated() " + hashCode());
+			if (DEBUG)
+				Log.d(TAG, " > onSurfaceCreated() " + hashCode());
 
 			super.onSurfaceCreated(holder);
 		}
@@ -156,7 +172,8 @@ public abstract class LibdgxWallpaperService extends WallpaperService {
 		@Override
 		public void onSurfaceDestroyed(final SurfaceHolder holder) {
 
-			if (DEBUG) Log.d(TAG, " > onSurfaceDestroyed() " + hashCode());
+			if (DEBUG)
+				Log.d(TAG, " > onSurfaceDestroyed() " + hashCode());
 
 			super.onSurfaceDestroyed(holder);
 		}
@@ -164,7 +181,9 @@ public abstract class LibdgxWallpaperService extends WallpaperService {
 		@Override
 		public void onVisibilityChanged(final boolean visible) {
 
-			if (DEBUG) Log.d(TAG, " > onVisibilityChanged(" + visible + ") " + hashCode());
+			if (DEBUG)
+				Log.d(TAG, " > onVisibilityChanged(" + visible + ") "
+						+ hashCode());
 
 			if (visible) {
 				onResume();
@@ -181,15 +200,21 @@ public abstract class LibdgxWallpaperService extends WallpaperService {
 				float xOffsetStep, float yOffsetStep, int xPixelOffset,
 				int yPixelOffset) {
 
-			if (DEBUG) Log.d(TAG, " > onVisibilityChanged(" + xOffset + " " + yOffset
-					+ " " + xOffsetStep + " " + yOffsetStep + " "
-					+ xPixelOffset + " " + yPixelOffset + ") " + hashCode());
+			if (DEBUG)
+				Log.d(TAG, " > onVisibilityChanged(" + xOffset + " " + yOffset
+						+ " " + xOffsetStep + " " + yOffsetStep + " "
+						+ xPixelOffset + " " + yPixelOffset + ") " + hashCode());
 
-			libdgxWallpaperListener.offsetChange(xOffset, yOffset, xOffsetStep, yOffsetStep, xPixelOffset, yPixelOffset);
-			
+			libdgxWallpaperApp.offsetChange(xOffset, yOffset, xOffsetStep,
+					yOffsetStep, xPixelOffset, yPixelOffset);
+
 			super.onOffsetsChanged(xOffset, yOffset, xOffsetStep, yOffsetStep,
 					xPixelOffset, yPixelOffset);
 
+		}
+
+		public void setLibdgxWallpaperApp(LibdgxWallpaperApp app) {
+			libdgxWallpaperApp = app;
 		}
 
 	}

@@ -67,7 +67,7 @@ public class AndroidApplicationLW implements Application {
 	protected AndroidInputLW input;
 	protected AndroidAudioLW audio;
 	protected AndroidFiles files;
-	protected ApplicationListener listener;
+	private ApplicationListener listener;
 	protected Handler handler;
 	protected boolean firstResume = true;
 
@@ -239,5 +239,9 @@ public class AndroidApplicationLW implements Application {
 
 	public Engine getEngine() {
 		return engine;
+	}
+
+	public ApplicationListener getListener() {
+		return listener;
 	}
 }

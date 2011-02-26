@@ -280,7 +280,7 @@ public final class AndroidGraphicsLW implements Graphics, Renderer {
 		this.height = height;
 		updatePpi();
 		gl.glViewport(0, 0, this.width, this.height);
-		app.listener.resize(width, height);
+		app.getListener().resize(width, height);
 	}
 
 	@Override
@@ -306,7 +306,7 @@ public final class AndroidGraphicsLW implements Graphics, Renderer {
 		gl.glViewport(0, 0, this.width, this.height);
 
 		if (created == false) {
-			app.listener.create();
+			app.getListener().create();
 			created = true;
 			synchronized (this) {
 				running = true;
@@ -413,7 +413,7 @@ public final class AndroidGraphicsLW implements Graphics, Renderer {
 		}
 
 		if (lresume) {
-			app.listener.resume();
+			app.getListener().resume();
 			Gdx.app.log("AndroidGraphics", "resumed");
 		}
 
@@ -424,16 +424,16 @@ public final class AndroidGraphicsLW implements Graphics, Renderer {
 						|| Gdx.graphics.getGL11() != null || Gdx.graphics
 						.getGL20() != null)) {
 			app.input.processEvents();
-			app.listener.render();
+			app.getListener().render();
 		}
 
 		if (lpause) {
-			app.listener.pause();
+			app.getListener().pause();
 			Gdx.app.log("AndroidGraphics", "paused");
 		}
 
 		if (ldestroy) {
-			app.listener.dispose();
+			app.getListener().dispose();
 			Gdx.app.log("AndroidGraphics", "destroyed");
 		}
 
