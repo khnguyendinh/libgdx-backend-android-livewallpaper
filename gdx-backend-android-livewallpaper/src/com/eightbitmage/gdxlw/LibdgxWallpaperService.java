@@ -37,8 +37,6 @@ public abstract class LibdgxWallpaperService extends WallpaperService {
 		super();
 	}
 
-	abstract protected LibdgxWallpaperInterface initialize(AndroidApplicationLW app);
-
 	@Override
 	public void onCreate() {
 		if (DEBUG)
@@ -47,11 +45,7 @@ public abstract class LibdgxWallpaperService extends WallpaperService {
 	}
 
 	@Override
-	public Engine onCreateEngine() {
-		if (DEBUG)
-			Log.d(TAG, " > onCreateEngine()");
-		return new LibdgxWallpaperEngine(this);
-	}
+	abstract public Engine onCreateEngine();
 
 	@Override
 	public void onDestroy() {
@@ -62,11 +56,13 @@ public abstract class LibdgxWallpaperService extends WallpaperService {
 
 	// ~~~~~~~~ MyEngine ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	public class LibdgxWallpaperEngine extends Engine {
-
-		AndroidApplicationLW app;
-		LibdgxWallpaperInterface libdgxWallpaperApp;
-		GLBaseSurfaceView view;
+	public abstract class LibdgxWallpaperEngine extends Engine {
+		
+		protected AndroidApplicationLW app;
+		protected LibdgxWallpaperApp libdgxWallpaperApp;
+		protected GLBaseSurfaceView view;
+		
+		abstract protected void initialize(AndroidApplicationLW app);
 
 		public LibdgxWallpaperEngine(
 				final LibdgxWallpaperService libdgxWallpaperService) {
@@ -76,7 +72,8 @@ public abstract class LibdgxWallpaperService extends WallpaperService {
 				Log.d(TAG, " > MyEngine() " + hashCode());
 
 			app = new AndroidApplicationLW(libdgxWallpaperService, this);
-			libdgxWallpaperApp = libdgxWallpaperService.initialize(app);
+			
+			initialize(app);
 
 			view = ((AndroidGraphicsLW) app.getGraphics()).getView();
 
@@ -213,9 +210,9 @@ public abstract class LibdgxWallpaperService extends WallpaperService {
 
 		}
 
-		public void setLibdgxWallpaperApp(LibdgxWallpaperApp app) {
-			libdgxWallpaperApp = app;
-		}
+//		public void setLibdgxWallpaperApp(LibdgxWallpaperApp app) {
+//			libdgxWallpaperApp = app;
+//		}
 
 	}
 
