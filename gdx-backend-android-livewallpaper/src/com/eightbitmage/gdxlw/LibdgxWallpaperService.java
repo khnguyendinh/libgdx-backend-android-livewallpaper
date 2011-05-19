@@ -60,6 +60,7 @@ public abstract class LibdgxWallpaperService extends WallpaperService {
 		
 		protected AndroidApplicationLW app;
 		protected LibdgxWallpaperApp libdgxWallpaperApp;
+		//protected LibdgxWallpaperInterface libdgxWallpaperApp;
 		protected GLBaseSurfaceView view;
 		
 		abstract protected void initialize(AndroidApplicationLW app);
