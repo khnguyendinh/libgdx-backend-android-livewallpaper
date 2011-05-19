@@ -1,3 +1,18 @@
+/*******************************************************************************
+ * Copyright 2011 See AUTHORS file.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ******************************************************************************/
 /*
  * Copyright 2010 Mario Zechner (contact@badlogicgames.com), Nathan Sweet (admin@esotericsoftware.com)
  * 
@@ -17,8 +32,11 @@ import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.GL10;
-import com.badlogic.gdx.graphics.g2d.OrthographicCamera;
+import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
@@ -41,6 +59,9 @@ public abstract class Box2DTest implements ApplicationListener, InputProcessor {
 
 	/** the renderer **/
 	protected Box2DDebugRenderer renderer;
+	
+	SpriteBatch batch;
+	BitmapFont font;
 
 	/** our box2D world **/
 	protected World world;
@@ -61,15 +82,24 @@ public abstract class Box2DTest implements ApplicationListener, InputProcessor {
 
 	@Override public void render () {
 		// update the world with a fixed time step
-		world.step(Gdx.app.getGraphics().getDeltaTime(), 8, 3);
+		long startTime = System.nanoTime();
+		world.step(Gdx.app.getGraphics().getDeltaTime(), 3, 3);
+		float updateTime = (System.nanoTime() - startTime) / 1000000000.0f;
 
+		startTime = System.nanoTime();
 		// clear the screen and setup the projection matrix
 		GL10 gl = Gdx.app.getGraphics().getGL10();
 		gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
-		camera.setMatrices();
+		camera.update();
+		camera.apply(gl);
 
 		// render the world using the debug renderer
-		renderer.render(world);			
+		renderer.render(world);
+		float renderTime = (System.nanoTime() - startTime) / 1000000000.0f;
+		
+		batch.begin();
+		font.draw(batch, "fps:" + Gdx.graphics.getFramesPerSecond() + ", update: " + updateTime + ", render: " + renderTime, 0, 20);
+		batch.end();
 	}
 
 	@Override public void create () {
@@ -80,9 +110,8 @@ public abstract class Box2DTest implements ApplicationListener, InputProcessor {
 		// We also position the camera so that it
 		// looks at (0,16) (that's where the middle of the
 		// screen will be located).
-		camera = new OrthographicCamera();
-		camera.setViewport(48, 32);
-		camera.getPosition().set(0, 15, 0);
+		camera = new OrthographicCamera(48, 32);		
+		camera.position.set(0, 15, 0);
 
 		// create the debug renderer
 		renderer = new Box2DDebugRenderer();
@@ -97,6 +126,9 @@ public abstract class Box2DTest implements ApplicationListener, InputProcessor {
 
 		// call abstract method to populate the world
 		createWorld(world);
+		
+		batch = new SpriteBatch();
+		font = new BitmapFont();
 	}
 
 	@Override public void dispose () {		
@@ -122,22 +154,22 @@ public abstract class Box2DTest implements ApplicationListener, InputProcessor {
 	}
 
 	/** we instantiate this vector and the callback here so we don't irritate the GC **/
-	Vector2 testPoint = new Vector2();
+	Vector3 testPoint = new Vector3();
 	QueryCallback callback = new QueryCallback() {
 		@Override public boolean reportFixture (Fixture fixture) {
 			// if the hit point is inside the fixture of the body
 			// we report it
-			if (fixture.testPoint(testPoint)) {
+			if (fixture.testPoint(testPoint.x, testPoint.y)) {
 				hitBody = fixture.getBody();
 				return false;
 			} else
 				return true;
 		}
 	};
-
+	
 	@Override public boolean touchDown (int x, int y, int pointer, int button) {
 		// translate the mouse coordinates to world coordinates
-		camera.getScreenToWorld(x, y, testPoint);
+		camera.unproject(testPoint.set(x, y, 0));
 		// ask the world which bodies are within the given
 		// bounding box around the mouse pointer
 		hitBody = null;
@@ -155,7 +187,7 @@ public abstract class Box2DTest implements ApplicationListener, InputProcessor {
 			def.bodyA = groundBody;
 			def.bodyB = hitBody;
 			def.collideConnected = true;
-			def.target.set(testPoint);
+			def.target.set(testPoint.x, testPoint.y);
 			def.maxForce = 1000.0f * hitBody.getMass();
 
 			mouseJoint = (MouseJoint)world.createJoint(def);
@@ -166,15 +198,15 @@ public abstract class Box2DTest implements ApplicationListener, InputProcessor {
 	}
 
 	/** another temporary vector **/
-	Vector2 target = new Vector2();
+	Vector2 target = new Vector2();	
 
 	@Override public boolean touchDragged (int x, int y, int pointer) {
 		// if a mouse joint exists we simply update
 		// the target of the joint based on the new
 		// mouse coordinates
 		if (mouseJoint != null) {
-			camera.getScreenToWorld(x, y, target);
-			mouseJoint.setTarget(target);
+			camera.unproject(testPoint.set(x, y, 0));
+			mouseJoint.setTarget(target.set(testPoint.x, testPoint.y));
 		}
 		return false;
 	}

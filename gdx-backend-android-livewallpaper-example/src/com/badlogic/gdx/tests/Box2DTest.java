@@ -1,16 +1,18 @@
-/*
- * Copyright 2010 Mario Zechner (contact@badlogicgames.com), Nathan Sweet (admin@esotericsoftware.com)
+/*******************************************************************************
+ * Copyright 2011 See AUTHORS file.
  * 
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the
- * License. You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  * 
- * http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  * 
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS"
- * BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language
- * governing permissions and limitations under the License.
- */
-
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ******************************************************************************/
 package com.badlogic.gdx.tests;
 
 import java.util.ArrayList;
@@ -19,11 +21,15 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL10;
+import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ImmediateModeRenderer;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
@@ -40,14 +46,15 @@ import com.badlogic.gdx.tests.utils.GdxTest;
 
 public class Box2DTest extends GdxTest implements InputProcessor {
 	/** the camera **/
-	private OrthographicCamera camera;
+	private com.badlogic.gdx.graphics.OrthographicCamera camera;
 
 	/** the immediate mode renderer to output our debug drawings **/
 	private ImmediateModeRenderer renderer;
 
-	/** a spritebatch and a font for text rendering **/
+	/** a spritebatch and a font for text rendering and a Texture to draw our boxes**/
 	private SpriteBatch batch;
 	private BitmapFont font;
+	private TextureRegion textureRegion;
 
 	/** our box2D world **/
 	private World world;
@@ -72,9 +79,8 @@ public class Box2DTest extends GdxTest implements InputProcessor {
 		// We also position the camera so that it
 		// looks at (0,16) (that's where the middle of the
 		// screen will be located).
-		camera = new OrthographicCamera();
-		camera.setViewport(48, 32);
-		camera.getPosition().set(0, 16, 0);
+		camera = new OrthographicCamera(48,32);		
+		camera.position.set(0, 16, 0);
 
 		// next we setup the immediate mode renderer
 		renderer = new ImmediateModeRenderer();
@@ -83,6 +89,7 @@ public class Box2DTest extends GdxTest implements InputProcessor {
 		batch = new SpriteBatch();
 		font = new BitmapFont();
 		font.setColor(Color.RED);
+		textureRegion = new TextureRegion(new Texture(Gdx.files.internal("data/badlogicsmall.jpg")));
 
 		// next we create out physics world.
 		createPhysicsWorld();
@@ -142,11 +149,8 @@ public class Box2DTest extends GdxTest implements InputProcessor {
 			boxBodyDef.position.x = -24 + (float)(Math.random() * 48);
 			boxBodyDef.position.y = 10 + (float)(Math.random() * 100);
 			Body boxBody = world.createBody(boxBodyDef);
-
-			// add the boxPoly shape as a fixture
-			FixtureDef fixtureDef = new FixtureDef();
-			fixtureDef.shape = boxPoly;
-			boxBody.createFixture(fixtureDef);
+		
+			boxBody.createFixture(boxPoly, 1);
 
 			// add the box to our list of boxes
 			boxes.add(boxBody);
@@ -169,17 +173,30 @@ public class Box2DTest extends GdxTest implements InputProcessor {
 		// matrices
 		GL10 gl = Gdx.graphics.getGL10();
 		gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
-		camera.setMatrices();
+		camera.update();
+		camera.apply(gl);
 
 		// next we render the ground body
 		renderBox(gl, groundBody, 50, 1);
 
-		// next we render each box via the ImmediateModeRenderer
-		// we instantiated previously
+		// next we render each box via the SpriteBatch.
+		// for this we have to set the projection matrix of the
+		// spritebatch to the camera's combined matrix. This will
+		// make the spritebatch work in world coordinates
+		batch.getProjectionMatrix().set(camera.combined);
+		batch.begin();
 		for (int i = 0; i < boxes.size(); i++) {
 			Body box = boxes.get(i);
-			renderBox(gl, box, 1, 1);
+			Vector2 position = box.getPosition(); // that's the box's center position
+			float angle = MathUtils.radiansToDegrees *box.getAngle(); // the rotation angle around the center
+			batch.draw(textureRegion, 
+						  position.x - 1, position.y - 1, // the bottom left corner of the box, unrotated
+						  1f, 1f, // the rotation center relative to the bottom left corner of the box
+						  2, 2, // the width and height of the box
+						  1, 1, // the scale on the x- and y-axis
+						  angle); // the rotation angle
 		}
+		batch.end();
 
 		// finally we render all contact points
 		gl.glPointSize(4);
@@ -191,7 +208,7 @@ public class Box2DTest extends GdxTest implements InputProcessor {
 				// get the world manifold from which we get the
 				// contact points. A manifold can have 0, 1 or 2
 				// contact points.
-				WorldManifold manifold = contact.GetWorldManifold();
+				WorldManifold manifold = contact.getWorldManifold();
 				int numContactPoints = manifold.getNumberOfContactPoints();
 				for (int j = 0; j < numContactPoints; j++) {
 					Vector2 point = manifold.getPoints()[j];
@@ -204,6 +221,9 @@ public class Box2DTest extends GdxTest implements InputProcessor {
 		gl.glPointSize(1);
 
 		// finally we render the time it took to update the world
+		// for this we have to set the projection matrix again, so 
+		// we work in pixel coordinates
+		batch.getProjectionMatrix().setToOrtho2D(0,0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		batch.begin();
 		font.draw(batch, "fps: " + Gdx.graphics.getFramesPerSecond() + " update time: " + updateTime, 0, 20);
 		batch.end();
@@ -239,7 +259,7 @@ public class Box2DTest extends GdxTest implements InputProcessor {
 	}
 
 	/** we instantiate this vector and the callback here so we don't irritate the GC **/
-	Vector2 testPoint = new Vector2();
+	Vector3 testPoint = new Vector3();
 	QueryCallback callback = new QueryCallback() {
 		@Override public boolean reportFixture (Fixture fixture) {
 			// if the hit fixture's body is the ground body
@@ -248,7 +268,7 @@ public class Box2DTest extends GdxTest implements InputProcessor {
 
 			// if the hit point is inside the fixture of the body
 			// we report it
-			if (fixture.testPoint(testPoint)) {
+			if (fixture.testPoint(testPoint.x, testPoint.y)) {
 				hitBody = fixture.getBody();
 				return false;
 			} else
@@ -256,9 +276,11 @@ public class Box2DTest extends GdxTest implements InputProcessor {
 		}
 	};
 
-	@Override public boolean touchUp (int x, int y, int pointer, int newParam) {
+	@Override public boolean touchDown (int x, int y, int pointer, int newParam) {
 		// translate the mouse coordinates to world coordinates
-		camera.getScreenToWorld(x, y, testPoint);
+		testPoint.set(x, y, 0);
+		camera.unproject(testPoint);
+		
 		// ask the world which bodies are within the given
 		// bounding box around the mouse pointer
 		hitBody = null;
@@ -271,7 +293,7 @@ public class Box2DTest extends GdxTest implements InputProcessor {
 			def.bodyA = groundBody;
 			def.bodyB = hitBody;
 			def.collideConnected = true;
-			def.target.set(testPoint);
+			def.target.set(testPoint.x, testPoint.y);
 			def.maxForce = 1000.0f * hitBody.getMass();
 
 			mouseJoint = (MouseJoint)world.createJoint(def);
@@ -293,14 +315,14 @@ public class Box2DTest extends GdxTest implements InputProcessor {
 		// if a mouse joint exists we simply update
 		// the target of the joint based on the new
 		// mouse coordinates
-		if (mouseJoint != null) {
-			camera.getScreenToWorld(x, y, target);
-			mouseJoint.setTarget(target);
+		if (mouseJoint != null) {			
+			camera.unproject(testPoint.set(x, y,0));
+			mouseJoint.setTarget(target.set(testPoint.x, testPoint.y));
 		}
 		return false;
 	}
 
-	@Override public boolean touchDown (int x, int y, int pointer, int button) {
+	@Override public boolean touchUp (int x, int y, int pointer, int button) {
 		// if a mouse joint exists we simply destroy it
 		if (mouseJoint != null) {
 			world.destroyJoint(mouseJoint);
@@ -308,8 +330,7 @@ public class Box2DTest extends GdxTest implements InputProcessor {
 		}
 		return false;
 	}
-	
-	
+
 	@Override public void dispose () {
 		world.dispose();
 	}
