@@ -71,12 +71,12 @@ public final class AndroidAudioLW implements Audio {
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override public AudioDevice newAudioDevice (boolean isMono) {
-		return new AndroidAudioDeviceLW(isMono);
-	}
+//	/**
+//	 * {@inheritDoc}
+//	 */
+//	@Override public AudioDevice newAudioDevice (boolean isMono) {
+//		return new AndroidAudioDeviceLW(isMono);
+//	}
 
 	/**
 	 * {@inheritDoc}
@@ -149,5 +149,11 @@ public final class AndroidAudioLW implements Audio {
 	 */
 	public void dispose () {
 		soundPool.release();
+	}
+
+	@Override
+	public AudioDevice newAudioDevice(int arg0, boolean arg1) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

@@ -3,37 +3,31 @@ package com.eightbitmage.gdx.lw.example;
 import android.content.SharedPreferences;
 import android.util.Log;
 
-import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.backends.android.livewallpaper.AndroidApplicationLW;
-import com.badlogic.gdx.tests.SimpleTest;
+import com.badlogic.gdx.tests.WaterRipples;
 import com.eightbitmage.gdxlw.LibdgxWallpaperService;
 
 public class TestLibdgxWallpaperService extends LibdgxWallpaperService {
+	
+	private boolean DEBUG = true;
+	private final String TAG = "Example-LW-Service";
 
-//	@Override
-//	protected void initialize(AndroidApplicationLW app) {
-//		app.initialize(new SimpleTest(), false);
-//	}
-	
-	
-	
-	private boolean DEBUG = false;
-	private final String TAG = "Lucky-LW-Service";
-
-	public static final String SHARED_PREFS_NAME = "luckysettings";
+	public static final String SHARED_PREFS_NAME = "examplesettings";
 
 	@Override
 	public Engine onCreateEngine() {
-		if (DEBUG)
+		if (DEBUG) {
 			Log.d(TAG, " > onCreateEngine()");
-		return new RainbowSwirlLibdgxWallpaperEngine(this);
+		}
+			
+		return new ExampleLibdgxWallpaperEngine(this);
 	}
 
-	public class RainbowSwirlLibdgxWallpaperEngine extends
+	public class ExampleLibdgxWallpaperEngine extends
 			LibdgxWallpaperEngine implements
 			SharedPreferences.OnSharedPreferenceChangeListener {
 
-		public RainbowSwirlLibdgxWallpaperEngine(
+		public ExampleLibdgxWallpaperEngine(
 				LibdgxWallpaperService libdgxWallpaperService) {
 			super(libdgxWallpaperService);
 		}
@@ -41,7 +35,7 @@ public class TestLibdgxWallpaperService extends LibdgxWallpaperService {
 		@Override
 		protected void initialize(AndroidApplicationLW androidApplicationLW) {
 
-			libdgxWallpaperApp = new SimpleTest();  
+			libdgxWallpaperApp = new WaterRipples();  
 
 			androidApplicationLW.initialize(libdgxWallpaperApp, false);
 

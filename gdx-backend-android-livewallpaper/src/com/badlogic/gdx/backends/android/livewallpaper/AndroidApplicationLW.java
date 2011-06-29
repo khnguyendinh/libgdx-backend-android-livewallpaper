@@ -16,7 +16,11 @@
 
 package com.badlogic.gdx.backends.android.livewallpaper;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import android.app.Activity;
+import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Debug;
@@ -32,9 +36,10 @@ import com.badlogic.gdx.Files;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Graphics;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.Preferences;
+import com.badlogic.gdx.backends.android.AndroidApplicationConfiguration;
 import com.badlogic.gdx.backends.android.AndroidFiles;
 import com.badlogic.gdx.backends.android.surfaceview.FillResolutionStrategy;
-import com.badlogic.gdx.backends.android.surfaceview.ResolutionStrategy;
 import com.badlogic.gdx.graphics.GL10;
 import com.badlogic.gdx.graphics.GL11;
 import com.badlogic.gdx.utils.GdxNativesLoader;
@@ -69,7 +74,8 @@ public class AndroidApplicationLW implements Application {
 	protected AndroidFiles files;
 	private ApplicationListener listener;
 	protected Handler handler;
-	protected boolean firstResume = true;
+	protected final List<Runnable> runnables = new ArrayList<Runnable>();
+    protected boolean firstResume = true;
 
 	/**
 	 * This method has to be called in the {@link Activity#onCreate(Bundle)}
@@ -89,7 +95,11 @@ public class AndroidApplicationLW implements Application {
 	 */
 	public void initialize(ApplicationListener listener,
 			boolean useGL2IfAvailable) {
-		initialize(listener, useGL2IfAvailable, new FillResolutionStrategy(), 0);
+		
+		AndroidApplicationConfiguration config = new AndroidApplicationConfiguration();
+	   	config.useGL20 = useGL2IfAvailable;
+		
+		initialize(listener, config);
 	}
 
 	/**
@@ -116,32 +126,55 @@ public class AndroidApplicationLW implements Application {
 	 *            event handler
 	 */
 	public void initialize(ApplicationListener listener,
-			boolean useGL2IfAvailable, ResolutionStrategy resolutionStrategy,
-			int sleepTime) {
+			AndroidApplicationConfiguration config) {
 
-		graphics = new AndroidGraphicsLW(this, useGL2IfAvailable,
-				resolutionStrategy);
+//		graphics = new AndroidGraphicsLW(this, useGL2IfAvailable,
+//				resolutionStrategy);
+//
+//		input = new AndroidInputLW(this, sleepTime);
+//
+//		audio = new AndroidAudioLW(this.getService());
+//		files = new AndroidFiles(this.getService().getAssets());
+//		this.listener = listener;
+//		this.handler = new Handler();
+//
+//		Gdx.app = this;
+//		Gdx.input = this.getInput();
+//		Gdx.audio = this.getAudio();
+//		Gdx.files = this.getFiles();
+//		Gdx.graphics = this.getGraphics();
 
-		input = new AndroidInputLW(this, sleepTime);
-
+		//
+		
+		graphics = new AndroidGraphicsLW(this, config.useGL20, config.resolutionStrategy==null?new FillResolutionStrategy():config.resolutionStrategy);
+		input = new AndroidInputLW(this, config);
 		audio = new AndroidAudioLW(this.getService());
 		files = new AndroidFiles(this.getService().getAssets());
 		this.listener = listener;
 		this.handler = new Handler();
-
+		
 		Gdx.app = this;
 		Gdx.input = this.getInput();
 		Gdx.audio = this.getAudio();
 		Gdx.files = this.getFiles();
 		Gdx.graphics = this.getGraphics();
-
+		
+//		requestWindowFeature(Window.FEATURE_NO_TITLE);
+//		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+//		getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
+//		setContentView(graphics.getView(), createLayoutParams());
+//		createWakeLock(config);
+		
 	}
 
 	public void onPause() {
 		graphics.pause();
 
-		if (audio != null)
-			audio.pause();
+		if (audio != null) audio.pause();
+		
+		//
+		
+		input.unregisterSensorListeners();
 	}
 
 	public void onResume() {
@@ -151,9 +184,9 @@ public class AndroidApplicationLW implements Application {
 		Gdx.files = this.getFiles();
 		Gdx.graphics = this.getGraphics();
 
-		if (audio != null)
-			audio.resume();
+		((AndroidInputLW)getInput()).registerSensorListeners();
 		
+		if (audio != null) audio.resume();		
 		if (!firstResume)
 			graphics.resume();
 		else
@@ -244,4 +277,26 @@ public class AndroidApplicationLW implements Application {
 	public ApplicationListener getListener() {
 		return listener;
 	}
+
+	@Override public Preferences getPreferences (String name) {
+		return new AndroidPreferencesLW(this.getService().getSharedPreferences(name, Context.MODE_PRIVATE));
+	}
+
+	@Override public void postRunnable (Runnable runnable) {
+		synchronized(runnables) {
+			runnables.add(runnable);
+		}
+	}
+	
+//	@Override public void onConfigurationChanged(Configuration config) {
+//		super.onConfigurationChanged(config);
+//		boolean keyboardAvailable = false;
+//		if(config.keyboardHidden == Configuration.HARDKEYBOARDHIDDEN_NO) keyboardAvailable = true;
+//		input.keyboardAvailable = keyboardAvailable;		
+//	}
+
+	@Override public void log (String tag, String message, Exception exception) {
+		Log.d(tag, message, exception);
+	}
+
 }

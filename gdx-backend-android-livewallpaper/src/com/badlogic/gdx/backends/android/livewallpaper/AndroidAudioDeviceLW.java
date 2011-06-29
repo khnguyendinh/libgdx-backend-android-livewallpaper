@@ -78,4 +78,10 @@ class AndroidAudioDeviceLW implements AudioDevice {
 			writtenSamples += track.write(buffer, writtenSamples, numSamples - writtenSamples);
 	}
 
+	@Override
+	public int getLatency() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
 }

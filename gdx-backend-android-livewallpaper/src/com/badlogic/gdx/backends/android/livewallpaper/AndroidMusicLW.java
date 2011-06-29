@@ -75,4 +75,10 @@ public class AndroidMusicLW implements Music {
 		isPrepared = false;
 	}
 
+	@Override
+	public float getPosition() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
 }

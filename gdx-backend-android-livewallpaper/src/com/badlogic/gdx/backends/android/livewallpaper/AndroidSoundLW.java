@@ -44,4 +44,10 @@ final class AndroidSoundLW implements Sound {
 		soundPool.play(soundId, volume, volume, 1, 0, 1);
 	}
 
+	@Override
+	public void stop() {
+		// TODO Auto-generated method stub
+		
+	}
+
 }
