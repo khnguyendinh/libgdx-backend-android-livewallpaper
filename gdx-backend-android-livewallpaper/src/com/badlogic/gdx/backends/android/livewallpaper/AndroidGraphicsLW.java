@@ -39,7 +39,9 @@ import com.badlogic.gdx.graphics.GL10;
 import com.badlogic.gdx.graphics.GL11;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.GLCommon;
+import com.badlogic.gdx.graphics.GLU;
 import com.badlogic.gdx.graphics.Mesh;
+import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
@@ -290,10 +292,10 @@ public final class AndroidGraphicsLW implements Graphics, Renderer {
 		logConfig(config);
 		updatePpi();
 
-		Mesh.invalidateAllMeshes();
-		Texture.invalidateAllTextures();
-		ShaderProgram.invalidateAllShaderPrograms();
-		FrameBuffer.invalidateAllFrameBuffers();
+		Mesh.invalidateAllMeshes(app);
+		Texture.invalidateAllTextures(app);
+		ShaderProgram.invalidateAllShaderPrograms(app);
+		FrameBuffer.invalidateAllFrameBuffers(app);
 
 		final Display display = ((WindowManager) app.getService()
 				.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
@@ -470,10 +472,10 @@ public final class AndroidGraphicsLW implements Graphics, Renderer {
 	}
 
 	public void clearManagedCaches() {
-		Mesh.clearAllMeshes();
-		Texture.clearAllTextures();
-		ShaderProgram.clearAllShaderPrograms();
-		FrameBuffer.clearAllFrameBuffers();
+		Mesh.clearAllMeshes(app);
+		Texture.clearAllTextures(app);
+		ShaderProgram.clearAllShaderPrograms(app);
+		FrameBuffer.clearAllFrameBuffers(app);
 	}
 
 	/**
@@ -506,5 +508,41 @@ public final class AndroidGraphicsLW implements Graphics, Renderer {
 
 	public GLBaseSurfaceView getView() {
 		return view;
+	}
+
+	@Override
+	public DisplayMode[] getDisplayModes() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public GLU getGLU() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean setDisplayMode(DisplayMode arg0) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public void setIcon(Pixmap arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setTitle(String arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public boolean supportsDisplayModeChange() {
+		// TODO Auto-generated method stub
+		return false;
 	}
 }

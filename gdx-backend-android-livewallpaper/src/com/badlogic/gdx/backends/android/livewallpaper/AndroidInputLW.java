@@ -17,8 +17,17 @@ package com.badlogic.gdx.backends.android.livewallpaper;
 
 import java.util.ArrayList;
 
+import android.content.Context;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
+import android.os.Vibrator;
+
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
+import com.badlogic.gdx.backends.android.AndroidApplicationConfiguration;
 import com.badlogic.gdx.utils.Pool;
 
 /**
@@ -27,16 +36,8 @@ import com.badlogic.gdx.utils.Pool;
  * @author mzechner
  * 
  */
-public final class AndroidInputLW implements Input {
-
-	int[] touchX = new int[10];
-	int[] touchY = new int[10];
-	boolean[] touched = new boolean[10];
-	ArrayList<TouchEvent> touchEvents = new ArrayList<TouchEvent>();
-
-	private InputProcessor processor;
-	private boolean justTouched;
-
+public final class AndroidInputLW implements Input, SensorEventListener {
+	
 	class TouchEvent {
 		static final int TOUCH_DOWN = 0;
 		static final int TOUCH_UP = 1;
@@ -49,202 +50,123 @@ public final class AndroidInputLW implements Input {
 		int pointer;
 	}
 
+
 	Pool<TouchEvent> usedTouchEvents = new Pool<TouchEvent>(16, 1000) {
-		protected TouchEvent newObject() {
+		protected TouchEvent newObject () {
 			return new TouchEvent();
 		}
 	};
-	private AndroidTouchHandlerLW touchHandler;
-	private int sleepTime;
 
-	public AndroidInputLW(AndroidApplicationLW androidApplicationLW,
-			int sleepTime) {
+	ArrayList<TouchEvent> touchEvents = new ArrayList<TouchEvent>();
+	int[] touchX = new int[20];
+	int[] touchY = new int[20];
+	boolean[] touched = new boolean[20];
+	int[] realId = new int[0];
+	//final boolean hasMultitouch;
+	private SensorManager manager;
+	public boolean accelerometerAvailable = false;
+	private final float[] accelerometerValues = new float[3];
+	final AndroidApplicationLW app;
+	private final AndroidTouchHandlerLW touchHandler;
+	private int sleepTime = 0;
+	private boolean catchBack = false;
+	private final Vibrator vibrator;
+	private boolean compassAvailable = false;
+	boolean keyboardAvailable;
+	private final float[] magneticFieldValues = new float[3];
+	private float azimuth = 0;
+	private float pitch = 0;
+	private float roll = 0;
+	//private float inclination = 0;
+	private boolean justTouched = false;	
+	private InputProcessor processor; 
+	private final AndroidApplicationConfiguration config;
 
+	public AndroidInputLW (AndroidApplicationLW activity, AndroidApplicationConfiguration config) {
+		this.config = config;
+		
+		for(int i = 0; i < realId.length; i++) realId[i] = -1;
+		this.app = activity;
+		this.sleepTime = config.touchSleepTime;
+		
 		touchHandler = new AndroidSingleTouchHandlerLW();
-		this.sleepTime = sleepTime;
+
+		vibrator = (Vibrator)activity.getService().getSystemService(Context.VIBRATOR_SERVICE);
+			
 	}
 
-	// ///
-
-	@Override
-	public boolean isAccelerometerAvailable() {
-		// TODO Auto-generated method stub
-		return false;
+	@Override public float getAccelerometerX () {
+		return accelerometerValues[0];
 	}
 
-	@Override
-	public float getAccelerometerX() {
-		// TODO Auto-generated method stub
-		return 0;
+	@Override public float getAccelerometerY () {
+		return accelerometerValues[1];
 	}
 
-	@Override
-	public float getAccelerometerY() {
-		// TODO Auto-generated method stub
-		return 0;
+	@Override public float getAccelerometerZ () {
+		return accelerometerValues[2];
 	}
 
-	@Override
-	public float getAccelerometerZ() {
-		// TODO Auto-generated method stub
-		return 0;
+	
+	@Override public int getX () {
+		synchronized(this) {
+			return touchX[0];
+		}
 	}
 
-	@Override
-	public int getX() {
-		return touchX[0];
+	@Override public int getY () {
+		synchronized(this) {
+			return touchY[0];
+		}
 	}
 
-	@Override
-	public int getY() {
-		return touchY[0];
+	@Override public int getX (int pointer) {
+		synchronized(this) {
+			return touchX[pointer];
+		}
 	}
 
-	@Override
-	public int getX(int pointer) {
-		return touchX[pointer];
+	@Override public int getY (int pointer) {
+		synchronized(this) {
+			return touchY[pointer];
+		}
 	}
 
-	@Override
-	public int getY(int pointer) {
-		return touchY[pointer];
+	public boolean isTouched (int pointer) {
+		synchronized(this) {
+			return touched[pointer];
+		}
 	}
 
-	@Override
-	public boolean isTouched(int pointer) {
-		return touched[pointer];
+	
+	@Override public boolean isTouched () {
+		synchronized(this) {
+			return touched[0];
+		}
 	}
 
-	@Override
-	public boolean isTouched() {
-		return touched[0];
-	}
-
-	@Override
-	public boolean isButtonPressed(int button) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean isKeyPressed(int key) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public void getTextInput(TextInputListener listener, String title,
-			String text) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void setOnscreenKeyboardVisible(boolean visible) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public boolean supportsOnscreenKeyboard() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean supportsMultitouch() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean supportsVibrator() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public void vibrate(int milliseconds) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void vibrate(long[] pattern, int repeat) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void cancelVibrate() {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public boolean supportsCompass() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public float getAzimuth() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	@Override
-	public float getPitch() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	@Override
-	public float getRoll() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	@Override
-	public void setCatchBackKey(boolean catchBack) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public boolean justTouched() {
-		return justTouched;
-	}
-
-	// ///
-
-	public void setInputProcessor(InputProcessor processor) {
+	public void setInputProcessor (InputProcessor processor) {
 		synchronized (this) {
 			this.processor = processor;
 		}
 	}
 
-	void processEvents() {
+	void processEvents () {
 		synchronized (this) {
 			justTouched = false;
 
 			if (processor != null) {
 				final InputProcessor processor = this.processor;
 
+				
 				int len = touchEvents.size();
 				for (int i = 0; i < len; i++) {
 					TouchEvent e = touchEvents.get(i);
 					switch (e.type) {
-					//case TouchEvent.TOUCH_DOWN:
-					//	processor.touchDown(e.x, e.y, e.pointer, Buttons.LEFT);
-					//	justTouched = true;
-					//	break;
 					case TouchEvent.TOUCH_UP:
 						processor.touchUp(e.x, e.y, e.pointer, Buttons.LEFT);
 						justTouched = true;
 						break;
-					// case TouchEvent.TOUCH_DRAGGED:
-					// processor.touchDragged(e.x, e.y, e.pointer);
 					}
 					usedTouchEvents.free(e);
 				}
@@ -252,19 +174,20 @@ public final class AndroidInputLW implements Input {
 				int len = touchEvents.size();
 				for (int i = 0; i < len; i++) {
 					TouchEvent e = touchEvents.get(i);
-					if (e.type == TouchEvent.TOUCH_UP)
-						justTouched = true;
+					if (e.type == TouchEvent.TOUCH_DOWN) justTouched = true;
 					usedTouchEvents.free(e);
 				}
-
+				
 			}
 
 			touchEvents.clear();
 		}
 	}
 
-	public boolean onTap(int pX, int pY) {
+	boolean requestFocus = true;
 
+	public boolean onTap(int pX, int pY) {
+		
 		// synchronized in handler.postTouchEvent()
 		touchHandler.onTap(pX, pY, this);
 
@@ -276,5 +199,166 @@ public final class AndroidInputLW implements Input {
 		}
 		return true;
 	}
+	
 
+	@Override public void onAccuracyChanged (Sensor arg0, int arg1) {
+
+	}
+
+	@Override public void onSensorChanged (SensorEvent event) {
+		if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+			System.arraycopy(event.values, 0, accelerometerValues, 0, accelerometerValues.length);
+		}
+		if(event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
+			System.arraycopy(event.values, 0, magneticFieldValues, 0, magneticFieldValues.length);
+		}
+	}
+
+
+	@Override public void setCatchBackKey (boolean catchBack) {
+		this.catchBack = catchBack;
+	}
+
+	@Override public void vibrate (int milliseconds) {
+		vibrator.vibrate(milliseconds);
+	}
+	
+	@Override public void vibrate (long[] pattern, int repeat) {
+		vibrator.vibrate(pattern, repeat);
+	}
+
+	@Override public void cancelVibrate () {
+		vibrator.cancel();
+	}
+
+	@Override public boolean justTouched () {
+		return justTouched;
+	}
+
+	@Override public boolean isButtonPressed (int button) {
+		if (button == Buttons.LEFT)
+			return isTouched();
+		else
+			return false;
+	}
+
+	final float[] R = new float[9];	
+	final float[] orientation = new float[3];			
+	private void updateOrientation() {
+		if(SensorManager.getRotationMatrix(R, null, accelerometerValues, magneticFieldValues)) {
+			SensorManager.getOrientation(R, orientation);
+			azimuth = (float)Math.toDegrees(orientation[0]);
+			pitch = (float)Math.toDegrees(orientation[1]);
+			roll = (float)Math.toDegrees(orientation[2]);			
+		}
+	}
+	
+	@Override public float getAzimuth () {
+		if(!compassAvailable)
+			return 0;
+		
+		updateOrientation();
+		return azimuth;
+	}
+
+	@Override public float getPitch () {
+		if(!compassAvailable)
+			return 0;
+		
+		updateOrientation();
+		return pitch;
+	}
+
+	@Override public float getRoll () {
+		if(!compassAvailable)
+			return 0;
+		
+		updateOrientation();
+		return roll;
+	}
+	
+	void registerSensorListeners() {		
+		if(config.useAccelerometer) {
+			manager = (SensorManager)app.getService().getSystemService(Context.SENSOR_SERVICE);
+			if (manager.getSensorList(Sensor.TYPE_ACCELEROMETER).size() == 0) {
+				accelerometerAvailable = false;
+			} else {
+				Sensor accelerometer = manager.getSensorList(Sensor.TYPE_ACCELEROMETER).get(0);
+				accelerometerAvailable = manager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_GAME);				
+			}
+		} else accelerometerAvailable = false;
+		
+		if(config.useCompass) {
+			if(manager == null) manager = (SensorManager)app.getService().getSystemService(Context.SENSOR_SERVICE);
+			Sensor sensor = manager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+			if(sensor != null) {
+				compassAvailable = accelerometerAvailable;
+				if(compassAvailable) {
+					compassAvailable = manager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_GAME);
+				}
+			} else {
+				compassAvailable = false;
+			}
+		} else compassAvailable = false;
+		Gdx.app.log("AndroidInput", "sensor listener setup");
+	}
+	
+	void unregisterSensorListeners() {	
+		if(manager != null) {
+			manager.unregisterListener(this);
+			manager = null;
+		}
+		Gdx.app.log("AndroidInput", "sensor listener tear down");
+	}
+	
+	@Override public InputProcessor getInputProcessor() {
+		return this.processor;
+	}
+
+	@Override public boolean isPeripheralAvailable (Peripheral peripheral) {
+		if(peripheral == Peripheral.Accelerometer) return accelerometerAvailable;
+		if(peripheral == Peripheral.Compass) return compassAvailable;
+		if(peripheral == Peripheral.HardwareKeyboard) return keyboardAvailable;
+		if(peripheral == Peripheral.OnscreenKeyboard) return true;
+		if(peripheral == Peripheral.Vibrator) return vibrator != null;
+		//if(peripheral == Peripheral.MultitouchScreen) return hasMultitouch;
+		return false;
+	}
+	
+	public int getFreePointerIndex() {
+		int len = realId.length;
+		for(int i = 0; i < len; i++) {
+			if(realId[i] == -1) return i;
+		}
+		
+		int[] tmp = new int[realId.length + 1];
+		System.arraycopy(realId, 0, tmp, 0, realId.length);
+		realId = tmp;
+		return tmp.length - 1;
+	}
+	
+	public int lookUpPointerIndex(int pointerId) {
+		int len = realId.length;
+		for(int i = 0; i < len; i++) {
+			if(realId[i] == pointerId) return i;
+		}
+		
+		return -1;
+	}
+
+	//
+	
+	@Override
+	public void getTextInput(TextInputListener arg0, String arg1, String arg2) {
+	}
+
+	@Override
+	public boolean isKeyPressed(int arg0) {
+		return false;
+	}
+
+	@Override
+	public void setOnscreenKeyboardVisible(boolean arg0) {
+	}
+	
 }

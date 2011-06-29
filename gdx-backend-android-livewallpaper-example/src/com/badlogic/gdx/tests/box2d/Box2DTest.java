@@ -46,6 +46,8 @@ import com.badlogic.gdx.physics.box2d.QueryCallback;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.physics.box2d.joints.MouseJoint;
 import com.badlogic.gdx.physics.box2d.joints.MouseJointDef;
+import com.eightbitmage.gdxlw.LibdgxWallpaperApp;
+import com.eightbitmage.gdxlw.LibdgxWallpaperInterface;
 
 /**
  * Base class for all Box2D Testbed tests, all subclasses must implement the createWorld() method.
@@ -53,7 +55,7 @@ import com.badlogic.gdx.physics.box2d.joints.MouseJointDef;
  * @author badlogicgames@gmail.com
  * 
  */
-public abstract class Box2DTest implements ApplicationListener, InputProcessor {
+public abstract class Box2DTest extends LibdgxWallpaperApp implements ApplicationListener, InputProcessor, LibdgxWallpaperInterface {
 	/** the camera **/
 	protected OrthographicCamera camera;
 
@@ -239,4 +241,10 @@ public abstract class Box2DTest implements ApplicationListener, InputProcessor {
 	public void resize(int width, int height) {
 		
 	}
+	
+	public void offsetChange (float xOffset, float yOffset,
+			float xOffsetStep, float yOffsetStep, int xPixelOffset,
+			int yPixelOffset) { } ;
+	
+	public void setIsPreview(boolean isPreview) { };
 }
