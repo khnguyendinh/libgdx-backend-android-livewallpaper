@@ -46,8 +46,7 @@ import com.badlogic.gdx.physics.box2d.QueryCallback;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.physics.box2d.joints.MouseJoint;
 import com.badlogic.gdx.physics.box2d.joints.MouseJointDef;
-import com.eightbitmage.gdxlw.LibdgxWallpaperApp;
-import com.eightbitmage.gdxlw.LibdgxWallpaperInterface;
+import com.eightbitmage.gdxlw.LibdgxWallpaperListener;
 
 /**
  * Base class for all Box2D Testbed tests, all subclasses must implement the createWorld() method.
@@ -55,7 +54,7 @@ import com.eightbitmage.gdxlw.LibdgxWallpaperInterface;
  * @author badlogicgames@gmail.com
  * 
  */
-public abstract class Box2DTest extends LibdgxWallpaperApp implements ApplicationListener, InputProcessor, LibdgxWallpaperInterface {
+public abstract class Box2DTest  implements ApplicationListener, InputProcessor, LibdgxWallpaperListener {
 	/** the camera **/
 	protected OrthographicCamera camera;
 

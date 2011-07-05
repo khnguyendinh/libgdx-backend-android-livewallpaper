@@ -20,6 +20,7 @@ import android.service.wallpaper.WallpaperService;
 import android.util.Log;
 import android.view.SurfaceHolder;
 
+import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.backends.android.livewallpaper.AndroidApplicationLW;
 import com.badlogic.gdx.backends.android.livewallpaper.AndroidGraphicsLW;
 import com.badlogic.gdx.backends.android.livewallpaper.AndroidInputLW;
@@ -59,8 +60,9 @@ public abstract class LibdgxWallpaperService extends WallpaperService {
 	public abstract class LibdgxWallpaperEngine extends Engine {
 		
 		protected AndroidApplicationLW app;
-		protected LibdgxWallpaperApp libdgxWallpaperApp;
-		//protected LibdgxWallpaperInterface libdgxWallpaperApp;
+		
+		protected LibdgxWallpaperListener wallpaperListener;
+		
 		protected GLBaseSurfaceView view;
 		
 		abstract protected void initialize(AndroidApplicationLW app);
@@ -79,6 +81,10 @@ public abstract class LibdgxWallpaperService extends WallpaperService {
 			view = ((AndroidGraphicsLW) app.getGraphics()).getView();
 
 		}
+		
+		public void setWallpaperListener(LibdgxWallpaperListener wallpaperListener) {
+			this.wallpaperListener = wallpaperListener ;
+		}
 
 		@Override
 		public Bundle onCommand(final String pAction, final int pX,
@@ -93,7 +99,7 @@ public abstract class LibdgxWallpaperService extends WallpaperService {
 			if (pAction.equals(WallpaperManager.COMMAND_TAP)) {
 				((AndroidInputLW) app.getInput()).onTap(pX, pY);
 			} else if (pAction.equals(WallpaperManager.COMMAND_DROP)) {
-				// TODO: handle drop event
+				((AndroidInputLW) app.getInput()).onDrop(pX, pY);
 			}
 
 			return super.onCommand(pAction, pX, pY, pZ, pExtras,
@@ -113,7 +119,7 @@ public abstract class LibdgxWallpaperService extends WallpaperService {
 			}
 			previousEngine = this;
 
-			libdgxWallpaperApp.setIsPreview(this.isPreview());
+			wallpaperListener.setIsPreview(this.isPreview());
 		}
 
 		@Override
@@ -203,17 +209,13 @@ public abstract class LibdgxWallpaperService extends WallpaperService {
 						+ " " + xOffsetStep + " " + yOffsetStep + " "
 						+ xPixelOffset + " " + yPixelOffset + ") " + hashCode());
 
-			libdgxWallpaperApp.offsetChange(xOffset, yOffset, xOffsetStep,
+			wallpaperListener.offsetChange(xOffset, yOffset, xOffsetStep,
 					yOffsetStep, xPixelOffset, yPixelOffset);
 
 			super.onOffsetsChanged(xOffset, yOffset, xOffsetStep, yOffsetStep,
 					xPixelOffset, yPixelOffset);
 
 		}
-
-//		public void setLibdgxWallpaperApp(LibdgxWallpaperApp app) {
-//			libdgxWallpaperApp = app;
-//		}
 
 	}
 

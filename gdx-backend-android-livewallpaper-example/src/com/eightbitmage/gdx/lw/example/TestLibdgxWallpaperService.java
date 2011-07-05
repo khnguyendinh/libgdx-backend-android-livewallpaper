@@ -4,7 +4,7 @@ import android.content.SharedPreferences;
 import android.util.Log;
 
 import com.badlogic.gdx.backends.android.livewallpaper.AndroidApplicationLW;
-import com.badlogic.gdx.tests.WaterRipples;
+import com.badlogic.gdx.tests.WaterRipplesLW;
 import com.eightbitmage.gdxlw.LibdgxWallpaperService;
 
 public class TestLibdgxWallpaperService extends LibdgxWallpaperService {
@@ -34,10 +34,12 @@ public class TestLibdgxWallpaperService extends LibdgxWallpaperService {
 
 		@Override
 		protected void initialize(AndroidApplicationLW androidApplicationLW) {
+			
+			WaterRipplesLW app = new WaterRipplesLW();
+			
+			setWallpaperListener(app);
 
-			libdgxWallpaperApp = new WaterRipples();  
-
-			androidApplicationLW.initialize(libdgxWallpaperApp, false);
+			androidApplicationLW.initialize(app, false);
 
 			//
 
