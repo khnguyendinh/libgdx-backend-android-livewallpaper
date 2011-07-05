@@ -42,6 +42,10 @@ public final class AndroidInputLW implements Input, SensorEventListener {
 		static final int TOUCH_DOWN = 0;
 		static final int TOUCH_UP = 1;
 		static final int TOUCH_DRAGGED = 2;
+		
+		static final int TOUCH_TAP = 3;
+		static final int TOUCH_DROP = 4;
+		
 
 		long timeStamp;
 		int type;
@@ -79,7 +83,7 @@ public final class AndroidInputLW implements Input, SensorEventListener {
 	private float roll = 0;
 	//private float inclination = 0;
 	private boolean justTouched = false;	
-	private InputProcessor processor; 
+	private InputProcessorLW processor; 
 	private final AndroidApplicationConfiguration config;
 
 	public AndroidInputLW (AndroidApplicationLW activity, AndroidApplicationConfiguration config) {
@@ -144,8 +148,15 @@ public final class AndroidInputLW implements Input, SensorEventListener {
 			return touched[0];
 		}
 	}
+	
+	@Override
+	public void setInputProcessor(InputProcessor processor) {
+		synchronized (this) {
+			this.processor = (InputProcessorLW) processor;
+		}
+	}
 
-	public void setInputProcessor (InputProcessor processor) {
+	public void setInputProcessor (InputProcessorLW processor) {
 		synchronized (this) {
 			this.processor = processor;
 		}
@@ -156,15 +167,18 @@ public final class AndroidInputLW implements Input, SensorEventListener {
 			justTouched = false;
 
 			if (processor != null) {
-				final InputProcessor processor = this.processor;
-
+				final InputProcessorLW processor = this.processor;
 				
 				int len = touchEvents.size();
 				for (int i = 0; i < len; i++) {
 					TouchEvent e = touchEvents.get(i);
 					switch (e.type) {
-					case TouchEvent.TOUCH_UP:
-						processor.touchUp(e.x, e.y, e.pointer, Buttons.LEFT);
+					case TouchEvent.TOUCH_TAP:
+						processor.touchTap(e.x, e.y);
+						justTouched = true;
+						break;
+					case TouchEvent.TOUCH_DROP:
+						processor.touchDrop(e.x, e.y);
 						justTouched = true;
 						break;
 					}
@@ -174,7 +188,7 @@ public final class AndroidInputLW implements Input, SensorEventListener {
 				int len = touchEvents.size();
 				for (int i = 0; i < len; i++) {
 					TouchEvent e = touchEvents.get(i);
-					if (e.type == TouchEvent.TOUCH_DOWN) justTouched = true;
+					if (e.type == TouchEvent.TOUCH_TAP) justTouched = true;
 					usedTouchEvents.free(e);
 				}
 				
@@ -190,6 +204,20 @@ public final class AndroidInputLW implements Input, SensorEventListener {
 		
 		// synchronized in handler.postTouchEvent()
 		touchHandler.onTap(pX, pY, this);
+
+		if (sleepTime != 0) {
+			try {
+				Thread.sleep(sleepTime);
+			} catch (InterruptedException e) {
+			}
+		}
+		return true;
+	}
+	
+	public boolean onDrop(int pX, int pY) {
+		
+		// synchronized in handler.postTouchEvent()
+		touchHandler.onDrop(pX, pY, this);
 
 		if (sleepTime != 0) {
 			try {
@@ -360,5 +388,7 @@ public final class AndroidInputLW implements Input, SensorEventListener {
 	@Override
 	public void setOnscreenKeyboardVisible(boolean arg0) {
 	}
+
+	
 	
 }

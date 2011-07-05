@@ -31,7 +31,18 @@ public class AndroidSingleTouchHandlerLW implements AndroidTouchHandlerLW {
 		input.touchX[0] = pX;
 		input.touchY[0] = pY;
 
-		postTouchEvent(input, TouchEvent.TOUCH_UP, pX, pY, 0);
+		postTouchEvent(input, TouchEvent.TOUCH_TAP, pX, pY, 0);
+		input.touched[0] = true;
+
+	}
+	
+	@Override
+	public void onDrop(int pX, int pY, AndroidInputLW input) {
+		
+		input.touchX[0] = pX;
+		input.touchY[0] = pY;
+
+		postTouchEvent(input, TouchEvent.TOUCH_DROP, pX, pY, 0);
 		input.touched[0] = true;
 
 	}

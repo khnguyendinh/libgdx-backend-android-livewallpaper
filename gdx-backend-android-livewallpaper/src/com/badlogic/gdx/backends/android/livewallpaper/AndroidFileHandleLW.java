@@ -45,6 +45,7 @@ public class AndroidFileHandleLW extends FileHandle {
 	}
 
 	public FileHandle child (String name) {
+		if (file.getPath().length() == 0) return new AndroidFileHandleLW(assets, new File(name), type);
 		return new AndroidFileHandleLW(assets, new File(file, name), type);
 	}
 

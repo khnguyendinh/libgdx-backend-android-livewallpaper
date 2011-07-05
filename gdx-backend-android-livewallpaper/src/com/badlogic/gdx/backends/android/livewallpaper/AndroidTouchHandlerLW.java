@@ -18,4 +18,6 @@ package com.badlogic.gdx.backends.android.livewallpaper;
 
 public interface AndroidTouchHandlerLW {
 	public void onTap (int pX, int pY, AndroidInputLW input);
+
+	public void onDrop(int pX, int pY, AndroidInputLW input);
 }

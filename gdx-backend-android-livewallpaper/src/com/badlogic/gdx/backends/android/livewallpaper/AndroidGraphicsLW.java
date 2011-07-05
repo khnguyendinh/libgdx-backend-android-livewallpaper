@@ -31,6 +31,7 @@ import android.view.WindowManager;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Graphics;
 import com.badlogic.gdx.backends.android.AndroidGL20;
+import com.badlogic.gdx.backends.android.AndroidGLU;
 import com.badlogic.gdx.backends.android.livewallpaper.surfaceview.DefaultGLSurfaceView;
 import com.badlogic.gdx.backends.android.livewallpaper.surfaceview.GLBaseSurfaceView;
 import com.badlogic.gdx.backends.android.livewallpaper.surfaceview.GLSurfaceView20;
@@ -63,6 +64,7 @@ public final class AndroidGraphicsLW implements Graphics, Renderer {
 	GL10 gl10;
 	GL11 gl11;
 	GL20 gl20;
+	GLU glu;
 
 	private long lastFrameTime = System.nanoTime();
 	private float deltaTime = 0;
@@ -259,11 +261,14 @@ public final class AndroidGraphicsLW implements Graphics, Renderer {
 				}
 			}
 		}
+		
+		this.glu = new AndroidGLU();
 
 		Gdx.gl = this.gl;
 		Gdx.gl10 = gl10;
 		Gdx.gl11 = gl11;
 		Gdx.gl20 = gl20;
+		Gdx.glu = glu;
 
 		Gdx.app.log("AndroidGraphics",
 				"OGL renderer: " + gl.glGetString(GL10.GL_RENDERER));
@@ -425,6 +430,14 @@ public final class AndroidGraphicsLW implements Graphics, Renderer {
 				&& (Gdx.graphics.getGL10() != null
 						|| Gdx.graphics.getGL11() != null || Gdx.graphics
 						.getGL20() != null)) {
+			
+			synchronized(app.runnables) {
+	      	   	for(int i = 0; i < app.runnables.size(); i++) {
+	      	   		app.runnables.get(i).run();
+	      	   	}
+	      	   	app.runnables.clear();
+	      	}
+			
 			app.input.processEvents();
 			app.getListener().render();
 		}
@@ -476,6 +489,11 @@ public final class AndroidGraphicsLW implements Graphics, Renderer {
 		Texture.clearAllTextures(app);
 		ShaderProgram.clearAllShaderPrograms(app);
 		FrameBuffer.clearAllFrameBuffers(app);
+		
+	    Gdx.app.log("AndroidGraphics", Mesh.getManagedStatus());
+	    Gdx.app.log("AndroidGraphics", Texture.getManagedStatus());
+	    Gdx.app.log("AndroidGraphics", ShaderProgram.getManagedStatus());
+	    Gdx.app.log("AndroidGraphics", FrameBuffer.getManagedStatus());
 	}
 
 	/**
@@ -512,37 +530,31 @@ public final class AndroidGraphicsLW implements Graphics, Renderer {
 
 	@Override
 	public DisplayMode[] getDisplayModes() {
-		// TODO Auto-generated method stub
-		return null;
+		return new DisplayMode[0];
 	}
 
 	@Override
 	public GLU getGLU() {
-		// TODO Auto-generated method stub
-		return null;
+		return glu;
 	}
 
 	@Override
 	public boolean setDisplayMode(DisplayMode arg0) {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	public void setIcon(Pixmap arg0) {
-		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
 	public void setTitle(String arg0) {
-		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
 	public boolean supportsDisplayModeChange() {
-		// TODO Auto-generated method stub
 		return false;
 	}
 }

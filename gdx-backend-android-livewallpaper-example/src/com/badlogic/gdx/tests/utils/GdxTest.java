@@ -29,22 +29,38 @@
 package com.badlogic.gdx.tests.utils;
 
 import com.badlogic.gdx.ApplicationListener;
-import com.eightbitmage.gdxlw.LibdgxWallpaperApp;
-import com.eightbitmage.gdxlw.LibdgxWallpaperInterface;
+import com.eightbitmage.gdxlw.LibdgxWallpaperListener;
 
-public abstract class GdxTest extends LibdgxWallpaperApp implements ApplicationListener, LibdgxWallpaperInterface
-{
-	public abstract boolean needsGL20( );		
-	public void create( ) { };
-	public void resume( ) { };
-	public void render( ) { };
-	public void resize(int width, int height) { };
-	public void pause( ) { };
-	public void dispose( ) { };
-		
-	public void offsetChange (float xOffset, float yOffset,
-			float xOffsetStep, float yOffsetStep, int xPixelOffset,
-			int yPixelOffset) { } ;
-	
-	public void setIsPreview(boolean isPreview) { };
+public abstract class GdxTest implements ApplicationListener,
+		LibdgxWallpaperListener {
+
+	public abstract boolean needsGL20();
+
+	public void create() {
+	};
+
+	public void resume() {
+	};
+
+	public void render() {
+	};
+
+	public void resize(int width, int height) {
+	};
+
+	public void pause() {
+	};
+
+	public void dispose() {
+	};
+
+	public void offsetChange(float xOffset, float yOffset, float xOffsetStep,
+			float yOffsetStep, int xPixelOffset, int yPixelOffset) {
+	};
+
+	private boolean isPreview;
+
+	public void setIsPreview(boolean isPreview) {
+		isPreview = this.isPreview;
+	};
 }

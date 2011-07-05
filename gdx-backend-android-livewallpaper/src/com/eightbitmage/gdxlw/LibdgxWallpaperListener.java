@@ -1,7 +1,7 @@
 package com.eightbitmage.gdxlw;
 
 
-public interface LibdgxWallpaperInterface {
+public interface LibdgxWallpaperListener {
 	
 	public void offsetChange (float xOffset, float yOffset,
 			float xOffsetStep, float yOffsetStep, int xPixelOffset,
