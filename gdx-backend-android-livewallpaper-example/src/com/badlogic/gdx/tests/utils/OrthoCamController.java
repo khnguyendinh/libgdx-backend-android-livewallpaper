@@ -16,11 +16,11 @@
 package com.badlogic.gdx.tests.utils;
 
 import com.badlogic.gdx.InputAdapter;
+import com.badlogic.gdx.backends.android.livewallpaper.InputProcessorLW;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 
-public class OrthoCamController extends InputAdapter {
+public class OrthoCamController extends InputAdapter implements InputProcessorLW {
 	final OrthographicCamera camera;
 	final Vector3 curr = new Vector3();
 	final Vector3 last = new Vector3(-1, -1, -1);	
@@ -44,5 +44,17 @@ public class OrthoCamController extends InputAdapter {
 	@Override public boolean touchUp(int x, int y, int pointer, int button) {
 		last.set(-1, -1, -1);
 		return false;
+	}
+
+	@Override
+	public void touchTap(int x, int y) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void touchDrop(int x, int y) {
+		// TODO Auto-generated method stub
+		
 	}
 }

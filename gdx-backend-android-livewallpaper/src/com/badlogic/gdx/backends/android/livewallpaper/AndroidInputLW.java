@@ -37,15 +37,14 @@ import com.badlogic.gdx.utils.Pool;
  * 
  */
 public final class AndroidInputLW implements Input, SensorEventListener {
-	
+
 	class TouchEvent {
 		static final int TOUCH_DOWN = 0;
 		static final int TOUCH_UP = 1;
 		static final int TOUCH_DRAGGED = 2;
-		
+
 		static final int TOUCH_TAP = 3;
 		static final int TOUCH_DROP = 4;
-		
 
 		long timeStamp;
 		int type;
@@ -54,9 +53,8 @@ public final class AndroidInputLW implements Input, SensorEventListener {
 		int pointer;
 	}
 
-
 	Pool<TouchEvent> usedTouchEvents = new Pool<TouchEvent>(16, 1000) {
-		protected TouchEvent newObject () {
+		protected TouchEvent newObject() {
 			return new TouchEvent();
 		}
 	};
@@ -66,7 +64,7 @@ public final class AndroidInputLW implements Input, SensorEventListener {
 	int[] touchY = new int[20];
 	boolean[] touched = new boolean[20];
 	int[] realId = new int[0];
-	//final boolean hasMultitouch;
+	// final boolean hasMultitouch;
 	private SensorManager manager;
 	public boolean accelerometerAvailable = false;
 	private final float[] accelerometerValues = new float[3];
@@ -81,117 +79,124 @@ public final class AndroidInputLW implements Input, SensorEventListener {
 	private float azimuth = 0;
 	private float pitch = 0;
 	private float roll = 0;
-	//private float inclination = 0;
-	private boolean justTouched = false;	
-	private InputProcessorLW processor; 
+	// private float inclination = 0;
+	private boolean justTouched = false;
+	private InputProcessor processor;
 	private final AndroidApplicationConfiguration config;
 
-	public AndroidInputLW (AndroidApplicationLW activity, AndroidApplicationConfiguration config) {
+	public AndroidInputLW(AndroidApplicationLW activity,
+			AndroidApplicationConfiguration config) {
 		this.config = config;
-		
-		for(int i = 0; i < realId.length; i++) realId[i] = -1;
+
+		for (int i = 0; i < realId.length; i++)
+			realId[i] = -1;
 		this.app = activity;
 		this.sleepTime = config.touchSleepTime;
-		
+
 		touchHandler = new AndroidSingleTouchHandlerLW();
 
-		vibrator = (Vibrator)activity.getService().getSystemService(Context.VIBRATOR_SERVICE);
-			
+		vibrator = (Vibrator) activity.getService().getSystemService(
+				Context.VIBRATOR_SERVICE);
+
 	}
 
-	@Override public float getAccelerometerX () {
+	@Override
+	public float getAccelerometerX() {
 		return accelerometerValues[0];
 	}
 
-	@Override public float getAccelerometerY () {
+	@Override
+	public float getAccelerometerY() {
 		return accelerometerValues[1];
 	}
 
-	@Override public float getAccelerometerZ () {
+	@Override
+	public float getAccelerometerZ() {
 		return accelerometerValues[2];
 	}
 
-	
-	@Override public int getX () {
-		synchronized(this) {
+	@Override
+	public int getX() {
+		synchronized (this) {
 			return touchX[0];
 		}
 	}
 
-	@Override public int getY () {
-		synchronized(this) {
+	@Override
+	public int getY() {
+		synchronized (this) {
 			return touchY[0];
 		}
 	}
 
-	@Override public int getX (int pointer) {
-		synchronized(this) {
+	@Override
+	public int getX(int pointer) {
+		synchronized (this) {
 			return touchX[pointer];
 		}
 	}
 
-	@Override public int getY (int pointer) {
-		synchronized(this) {
+	@Override
+	public int getY(int pointer) {
+		synchronized (this) {
 			return touchY[pointer];
 		}
 	}
 
-	public boolean isTouched (int pointer) {
-		synchronized(this) {
+	public boolean isTouched(int pointer) {
+		synchronized (this) {
 			return touched[pointer];
 		}
 	}
 
-	
-	@Override public boolean isTouched () {
-		synchronized(this) {
+	@Override
+	public boolean isTouched() {
+		synchronized (this) {
 			return touched[0];
 		}
 	}
-	
+
 	@Override
 	public void setInputProcessor(InputProcessor processor) {
 		synchronized (this) {
-			this.processor = (InputProcessorLW) processor;
+			this.processor = (InputProcessor) processor;
 		}
 	}
 
-	public void setInputProcessor (InputProcessorLW processor) {
-		synchronized (this) {
-			this.processor = processor;
-		}
-	}
-
-	void processEvents () {
+	void processEvents() {
 		synchronized (this) {
 			justTouched = false;
 
 			if (processor != null) {
-				final InputProcessorLW processor = this.processor;
-				
-				int len = touchEvents.size();
-				for (int i = 0; i < len; i++) {
-					TouchEvent e = touchEvents.get(i);
-					switch (e.type) {
-					case TouchEvent.TOUCH_TAP:
-						processor.touchTap(e.x, e.y);
-						justTouched = true;
-						break;
-					case TouchEvent.TOUCH_DROP:
-						processor.touchDrop(e.x, e.y);
-						justTouched = true;
-						break;
+
+				if (this.processor instanceof InputProcessorLW) {
+					final InputProcessorLW processor = (InputProcessorLW)this.processor;
+
+					int len = touchEvents.size();
+					for (int i = 0; i < len; i++) {
+						TouchEvent e = touchEvents.get(i);
+						switch (e.type) {
+						case TouchEvent.TOUCH_TAP:
+							processor.touchTap(e.x, e.y);
+							justTouched = true;
+							break;
+						case TouchEvent.TOUCH_DROP:
+							processor.touchDrop(e.x, e.y);
+							justTouched = true;
+							break;
+						}
+						usedTouchEvents.free(e);
 					}
-					usedTouchEvents.free(e);
 				}
 			} else {
 				int len = touchEvents.size();
 				for (int i = 0; i < len; i++) {
 					TouchEvent e = touchEvents.get(i);
-					if (e.type == TouchEvent.TOUCH_TAP) justTouched = true;
+					if (e.type == TouchEvent.TOUCH_TAP)
+						justTouched = true;
 					usedTouchEvents.free(e);
 				}
-				
+
 			}
 
 			touchEvents.clear();
@@ -201,7 +206,7 @@ public final class AndroidInputLW implements Input, SensorEventListener {
 	boolean requestFocus = true;
 
 	public boolean onTap(int pX, int pY) {
-		
+
 		// synchronized in handler.postTouchEvent()
 		touchHandler.onTap(pX, pY, this);
 
@@ -213,9 +218,9 @@ public final class AndroidInputLW implements Input, SensorEventListener {
 		}
 		return true;
 	}
-	
+
 	public boolean onDrop(int pX, int pY) {
-		
+
 		// synchronized in handler.postTouchEvent()
 		touchHandler.onDrop(pX, pY, this);
 
@@ -227,155 +232,186 @@ public final class AndroidInputLW implements Input, SensorEventListener {
 		}
 		return true;
 	}
-	
 
-	@Override public void onAccuracyChanged (Sensor arg0, int arg1) {
+	@Override
+	public void onAccuracyChanged(Sensor arg0, int arg1) {
 
 	}
 
-	@Override public void onSensorChanged (SensorEvent event) {
+	@Override
+	public void onSensorChanged(SensorEvent event) {
 		if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-			System.arraycopy(event.values, 0, accelerometerValues, 0, accelerometerValues.length);
+			System.arraycopy(event.values, 0, accelerometerValues, 0,
+					accelerometerValues.length);
 		}
-		if(event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
-			System.arraycopy(event.values, 0, magneticFieldValues, 0, magneticFieldValues.length);
+		if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
+			System.arraycopy(event.values, 0, magneticFieldValues, 0,
+					magneticFieldValues.length);
 		}
 	}
 
-
-	@Override public void setCatchBackKey (boolean catchBack) {
+	@Override
+	public void setCatchBackKey(boolean catchBack) {
 		this.catchBack = catchBack;
 	}
 
-	@Override public void vibrate (int milliseconds) {
+	@Override
+	public void vibrate(int milliseconds) {
 		vibrator.vibrate(milliseconds);
 	}
-	
-	@Override public void vibrate (long[] pattern, int repeat) {
+
+	@Override
+	public void vibrate(long[] pattern, int repeat) {
 		vibrator.vibrate(pattern, repeat);
 	}
 
-	@Override public void cancelVibrate () {
+	@Override
+	public void cancelVibrate() {
 		vibrator.cancel();
 	}
 
-	@Override public boolean justTouched () {
+	@Override
+	public boolean justTouched() {
 		return justTouched;
 	}
 
-	@Override public boolean isButtonPressed (int button) {
+	@Override
+	public boolean isButtonPressed(int button) {
 		if (button == Buttons.LEFT)
 			return isTouched();
 		else
 			return false;
 	}
 
-	final float[] R = new float[9];	
-	final float[] orientation = new float[3];			
+	final float[] R = new float[9];
+	final float[] orientation = new float[3];
+
 	private void updateOrientation() {
-		if(SensorManager.getRotationMatrix(R, null, accelerometerValues, magneticFieldValues)) {
+		if (SensorManager.getRotationMatrix(R, null, accelerometerValues,
+				magneticFieldValues)) {
 			SensorManager.getOrientation(R, orientation);
-			azimuth = (float)Math.toDegrees(orientation[0]);
-			pitch = (float)Math.toDegrees(orientation[1]);
-			roll = (float)Math.toDegrees(orientation[2]);			
+			azimuth = (float) Math.toDegrees(orientation[0]);
+			pitch = (float) Math.toDegrees(orientation[1]);
+			roll = (float) Math.toDegrees(orientation[2]);
 		}
 	}
-	
-	@Override public float getAzimuth () {
-		if(!compassAvailable)
+
+	@Override
+	public float getAzimuth() {
+		if (!compassAvailable)
 			return 0;
-		
+
 		updateOrientation();
 		return azimuth;
 	}
 
-	@Override public float getPitch () {
-		if(!compassAvailable)
+	@Override
+	public float getPitch() {
+		if (!compassAvailable)
 			return 0;
-		
+
 		updateOrientation();
 		return pitch;
 	}
 
-	@Override public float getRoll () {
-		if(!compassAvailable)
+	@Override
+	public float getRoll() {
+		if (!compassAvailable)
 			return 0;
-		
+
 		updateOrientation();
 		return roll;
 	}
-	
-	void registerSensorListeners() {		
-		if(config.useAccelerometer) {
-			manager = (SensorManager)app.getService().getSystemService(Context.SENSOR_SERVICE);
+
+	void registerSensorListeners() {
+		if (config.useAccelerometer) {
+			manager = (SensorManager) app.getService().getSystemService(
+					Context.SENSOR_SERVICE);
 			if (manager.getSensorList(Sensor.TYPE_ACCELEROMETER).size() == 0) {
 				accelerometerAvailable = false;
 			} else {
-				Sensor accelerometer = manager.getSensorList(Sensor.TYPE_ACCELEROMETER).get(0);
-				accelerometerAvailable = manager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_GAME);				
+				Sensor accelerometer = manager.getSensorList(
+						Sensor.TYPE_ACCELEROMETER).get(0);
+				accelerometerAvailable = manager.registerListener(this,
+						accelerometer, SensorManager.SENSOR_DELAY_GAME);
 			}
-		} else accelerometerAvailable = false;
-		
-		if(config.useCompass) {
-			if(manager == null) manager = (SensorManager)app.getService().getSystemService(Context.SENSOR_SERVICE);
-			Sensor sensor = manager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-			if(sensor != null) {
+		} else
+			accelerometerAvailable = false;
+
+		if (config.useCompass) {
+			if (manager == null)
+				manager = (SensorManager) app.getService().getSystemService(
+						Context.SENSOR_SERVICE);
+			Sensor sensor = manager
+					.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+			if (sensor != null) {
 				compassAvailable = accelerometerAvailable;
-				if(compassAvailable) {
-					compassAvailable = manager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_GAME);
+				if (compassAvailable) {
+					compassAvailable = manager.registerListener(this, sensor,
+							SensorManager.SENSOR_DELAY_GAME);
 				}
 			} else {
 				compassAvailable = false;
 			}
-		} else compassAvailable = false;
+		} else
+			compassAvailable = false;
 		Gdx.app.log("AndroidInput", "sensor listener setup");
 	}
-	
-	void unregisterSensorListeners() {	
-		if(manager != null) {
+
+	void unregisterSensorListeners() {
+		if (manager != null) {
 			manager.unregisterListener(this);
 			manager = null;
 		}
 		Gdx.app.log("AndroidInput", "sensor listener tear down");
 	}
-	
-	@Override public InputProcessor getInputProcessor() {
+
+	@Override
+	public InputProcessor getInputProcessor() {
 		return this.processor;
 	}
 
-	@Override public boolean isPeripheralAvailable (Peripheral peripheral) {
-		if(peripheral == Peripheral.Accelerometer) return accelerometerAvailable;
-		if(peripheral == Peripheral.Compass) return compassAvailable;
-		if(peripheral == Peripheral.HardwareKeyboard) return keyboardAvailable;
-		if(peripheral == Peripheral.OnscreenKeyboard) return true;
-		if(peripheral == Peripheral.Vibrator) return vibrator != null;
-		//if(peripheral == Peripheral.MultitouchScreen) return hasMultitouch;
+	@Override
+	public boolean isPeripheralAvailable(Peripheral peripheral) {
+		if (peripheral == Peripheral.Accelerometer)
+			return accelerometerAvailable;
+		if (peripheral == Peripheral.Compass)
+			return compassAvailable;
+		if (peripheral == Peripheral.HardwareKeyboard)
+			return keyboardAvailable;
+		if (peripheral == Peripheral.OnscreenKeyboard)
+			return true;
+		if (peripheral == Peripheral.Vibrator)
+			return vibrator != null;
+		// if(peripheral == Peripheral.MultitouchScreen) return hasMultitouch;
 		return false;
 	}
-	
+
 	public int getFreePointerIndex() {
 		int len = realId.length;
-		for(int i = 0; i < len; i++) {
-			if(realId[i] == -1) return i;
+		for (int i = 0; i < len; i++) {
+			if (realId[i] == -1)
+				return i;
 		}
-		
+
 		int[] tmp = new int[realId.length + 1];
 		System.arraycopy(realId, 0, tmp, 0, realId.length);
 		realId = tmp;
 		return tmp.length - 1;
 	}
-	
+
 	public int lookUpPointerIndex(int pointerId) {
 		int len = realId.length;
-		for(int i = 0; i < len; i++) {
-			if(realId[i] == pointerId) return i;
+		for (int i = 0; i < len; i++) {
+			if (realId[i] == pointerId)
+				return i;
 		}
-		
+
 		return -1;
 	}
 
 	//
-	
+
 	@Override
 	public void getTextInput(TextInputListener arg0, String arg1, String arg2) {
 	}
@@ -389,6 +425,4 @@ public final class AndroidInputLW implements Input, SensorEventListener {
 	public void setOnscreenKeyboardVisible(boolean arg0) {
 	}
 
-	
-	
 }
