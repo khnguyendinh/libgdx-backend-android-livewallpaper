@@ -20,7 +20,6 @@ import android.service.wallpaper.WallpaperService;
 import android.util.Log;
 import android.view.SurfaceHolder;
 
-import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.backends.android.livewallpaper.AndroidApplicationLW;
 import com.badlogic.gdx.backends.android.livewallpaper.AndroidGraphicsLW;
 import com.badlogic.gdx.backends.android.livewallpaper.AndroidInputLW;
