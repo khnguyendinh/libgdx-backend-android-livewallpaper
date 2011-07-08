@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+	<!-- Application Info -->
+	<string name="app_name">LW Template - Live Wallpaper</string>
+	<string name="wallpapers">LW Template</string>
+	<string name="description">LW Template Description</string>
+
+</resources>
