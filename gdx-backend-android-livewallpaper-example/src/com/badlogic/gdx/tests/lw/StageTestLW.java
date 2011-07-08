@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.backends.android.livewallpaper.InputProcessorLW;
 import com.badlogic.gdx.graphics.GL10;
 import com.badlogic.gdx.graphics.Texture;
@@ -233,6 +232,21 @@ public class StageTestLW extends GdxTest implements InputProcessorLW {
 
 	@Override
 	public void touchTap(int x, int y) {
+		
+		boolean touched = ui.touchDown(x, y, 0, 0); 
+		if (touched) {
+			Actor hitActor = ui.getLastTouchedChild();
+			
+			if (hitActor == null) return;
+			
+			if (hitActor.name.startsWith("blend")) if (stage.getSpriteBatch().isBlendingEnabled())
+				stage.getSpriteBatch().disableBlending();
+			else
+				stage.getSpriteBatch().enableBlending();
+			
+			if (hitActor.name.startsWith("rotate")) rotateSprites = !rotateSprites;
+			if (hitActor.name.startsWith("scale")) scaleSprites = !scaleSprites;
+		}
 	
 	}
 
